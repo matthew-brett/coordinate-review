@@ -2,6 +2,8 @@ I am working on the code in this repository, a branch of https://github.com/scik
 
 The code is in directory `main`.
 
+Please read `main/CONTRIBUTING.rst` for details on the structure of this repository, and how to work with it.
+
 The code uses two conventions for specifying and returning coordinates in images.
 
 As background, consider some image, `img`, loaded as a Numpy array, shape (M,
