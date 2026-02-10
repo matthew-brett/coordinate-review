@@ -365,10 +365,15 @@ with a `plane_axis=` keyword argument.
             Output image.
   ```
 
-  Input image can be 3D, and arguments `shift_x`, `shift_y`, and `shift_z`.
-  But the `shift_` arguments appear, oddly, to be offsets in `i, j, k`
-  respectively of the `footprint`.   The first axis does appear to be special
-  in some way.
+  Input image can be 3D, and arguments `shift_x`, `shift_y`, and `shift_z`. But
+  the `shift_` arguments appear, oddly, to be offsets in `i, j, k` respectively
+  of the `footprint`.   There are specific 3D implementations in the
+  `generic.py` filters, called as `generic_cy._<name>_3D`. For example, in
+  `equalize`, this is `generic_cy._equalize_3D`.  These functions are
+  implemented in `generic_cy.pyx`, and each end up calling the `_core_3D`
+  function in `filters/rank/core_cy_3d.pyx`.  `plane` is used in Cython
+  function `_core_3D` and functions called therefrom.  So the question is
+  — does `_core_3D` treat the first dimension as special in some way?
 
 * `src/skimage/restoration/deconvolution.py` :
 
@@ -386,13 +391,90 @@ with a `plane_axis=` keyword argument.
       ...
   ```
 
-  This ends up calling `scipy.signal.convolve` on the input array, so no semantic meaning to the axes, and docstring better put as:
+  This ends up calling `scipy.signal.convolve` on the input array, so no
+  semantic meaning to the axes, and docstring better put as:
 
   ```rest
       Parameters
       ----------
       image : N-D ndarray
   ```
+
+* `segmentation/_watershed.py` `watershed` function:
+
+  ```rest
+    """Find watershed basins in an image flooded from given markers.
+
+    Parameters
+    ----------
+    image : (M, N[, ...]) ndarray
+        Data array where the lowest value points are labeled first.
+    markers : int, or (M, N[, ...]) ndarray of int, optional
+        The desired number of basins, or an array marking the basins with the
+        values to be assigned in the label matrix. Zero means not a marker. If
+        None, the (default) markers are determined as the local minima of
+        `image`. Specifically, the computation is equivalent to applying
+        :func:`skimage.morphology.local_minima` onto `image`, followed by
+        :func:`skimage.measure.label` onto the result (with the same given
+        `connectivity`). Generally speaking, users are encouraged to pass
+        markers explicitly.
+    connectivity : int or ndarray, optional
+        The neighborhood connectivity. An integer is interpreted as in
+        ``scipy.ndimage.generate_binary_structure``, as the maximum number
+        of orthogonal steps to reach a neighbor. An array is directly
+        interpreted as a footprint (structuring element). Default value is 1.
+        In 2D, 1 gives a 4-neighborhood while 2 gives an 8-neighborhood.
+    offset : array_like of shape image.ndim, optional
+        The coordinates of the center of the footprint.
+    mask : (M, N[, ...]) ndarray of bools or 0's and 1's, optional
+        Array of same shape as `image`. Only points at which mask == True
+        will be labeled.
+    compactness : float, optional
+        Use compact watershed [1]_ with given compactness parameter.
+        Higher values result in more regularly-shaped watershed basins.
+    watershed_line : bool, optional
+        If True, a one-pixel wide line separates the regions
+        obtained by the watershed algorithm. The line has the label 0.
+        Note that the method used for adding this line expects that
+        marker regions are not adjacent; the watershed line may not catch
+        borders between adjacent marker regions.
+
+    Returns
+    -------
+    out : ndarray
+        A labeled matrix of the same type and shape as `markers`.
+  ```
+
+  This looks like it is an N-D function.
+
+Other instances (via `ripgrep`) of `plane` to review in code-base:
+
+```
+tests/skimage/color/test_colorlabel.py:    # Labeling a 3D stack of duplicates gives the same result in each plane
+tests/skimage/color/test_colorlabel.py:    for labeled_plane in labeled_3d:
+tests/skimage/color/test_colorlabel.py:        assert_array_equal(labeled_plane, labeled_2d)
+tests/skimage/restoration/test_rolling_ball.py:    # infinite plane light source at top left corner
+src/skimage/measure/fit.py:        """Predict intersection of line model with orthogonal hyperplane.
+src/skimage/measure/fit.py:            Axis orthogonal to the hyperplane intersecting the line.
+src/skimage/graph/spath.py:    # Valid starting positions are anywhere on the hyperplane defined by
+src/skimage/graph/spath.py:    # hyperplane at position -1 along the same.
+src/skimage/graph/_mcp.pyx:    """Return an array with edge points/lines/planes/hyperplanes marked.
+src/skimage/segmentation/_slic.pyx:    a cut-plane through the volume. So, if the order was (x, y, z) and
+src/skimage/segmentation/_slic.pyx:    we wanted to look at the 5th cut plane, we would write::
+src/skimage/segmentation/_slic.pyx:        my_z_plane = img3d[:, :, 5]
+src/skimage/segmentation/_slic.pyx:        my_z_plane = img3d[5]
+src/skimage/restoration/_denoise.py:    plane separately.
+src/skimage/restoration/_nl_means_denoising.pyx:    # Iterate over planes, taking padding into account
+src/skimage/restoration/_nl_means_denoising.pyx:        Shift along the plane axis.
+src/skimage/restoration/_nl_means_denoising.pyx:        Shift along the plane axis.
+src/skimage/restoration/_nl_means_denoising.pyx:        # Iterate over shifts along the plane axis
+src/skimage/restoration/_nl_means_denoising.pyx:                    # Iterate over planes, taking offset and shift into account
+src/skimage/restoration/_nl_means_denoising.pyx:    # Iterate over shifts along the plane axis
+src/skimage/restoration/_nl_means_denoising.pyx:                        # Iterate over planes, taking offset and shift into account
+```
+
+Also see output of `rg "\(M\s*,\s*N"` on codebase in `mn.md`.  There are
+multiple instances of `M, N[, P]` etc.
 
 ## x and y in variables and docstrings
 
@@ -453,3 +535,6 @@ Edit:
 > CONTRIBUTING.rst:* Refer to array dimensions as (plane), row, column, not as
 x, y, z. See :ref:`Coordinate conventions
 <numpy-images-coordinate-conventions>` in the user guide for more information.
+
+And edit that document (`doc/source/user_guide/numpy_images.rst`) for plane
+conventions etc.
