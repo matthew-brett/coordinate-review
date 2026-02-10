@@ -333,5 +333,11 @@ In those cases, we should have the following policy:
         indicates the usage of the last axis initially (Axx, Axy, Ayy).
   ```
 
-  Suggest removing this option in Skimage2, leaving with default `rc`
-  behavior.
+  There are currently 6 uses of this `'xy'` option on Github with search
+  `/structure_tensor\(.*,.*["']xy["']/  AND NOT path:test_corner.py`
+  (to avoid copies of the Skimage test suite).  Five are within `nematic` and
+  `NematicTL` repos by `viciya`; one is in a project repo
+  `tiagopetena/computer_vision`.  These could be resolved by suitable PRs.  But `/hessian_matrix\(.*,.*["']xy["']/  AND NOT path:test_corner.py` occurs in 41 files, so that would be some work to resolve with PRs.  In neither case is the `order='xy'` case easy to pull out with a helper function.
+
+  Suggest retaining this option in Skimage2, leaving with default `rc`
+  behavior.  Perhaps we could deprecate at some later stage.
