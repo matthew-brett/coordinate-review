@@ -294,6 +294,8 @@ with a `plane_axis=` keyword argument.
   `input_` is first axis-reordered to order axes in ascending size, before
   calling `scan3D`, and the array is then axis-reordered to match input.
   `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
+  This implies that we can roll axes and run algorithm, then roll back to get
+  the same result.  Test.
 * `src/skimage/draw/draw.py`: `rectangle`.  `start` input argument is:
 
   ```rest
@@ -313,8 +315,9 @@ with a `plane_axis=` keyword argument.
         `start` point is not included.
   ```
 
-  This does assume a semantic meaning to the first dimension, and to the
-  second and third, which are "row" and "column".  One option is to change docstring to:
+  This does assume a semantic meaning to the first dimension, and to the second
+  and third, which are "row" and "column".  But it doesn't appear a semantic
+  meaning is needed.  One option is to change docstring to:
 
   ```
     start : tuple
@@ -334,10 +337,62 @@ with a `plane_axis=` keyword argument.
   ```
 
 * Various `filter.rank` functions calling `_core_3D` in
-  `filters/rank/core_cy_3d.pyx`.  Input image is 3D, and arguments `shift_x`,
-  `shift_y`, and `shift_z`.  But these appear, oddly, to be offsets in `i, j,
-  k` respectively of the `footprint`.   The first axis does appear to be
-  special in some way.
+  `filters/rank/core_cy_3d.pyx`.  Maybe all in `rank.generic`, e.g
+  `rank.equalize`, called with these inputs:
+
+  ```rest
+    def equalize(image, footprint, out=None, mask=None, shift_x=0, shift_y=0, shift_z=0):
+        """Equalize image using local histogram.
+
+        Parameters
+        ----------
+        image : ndarray of shape ([P,] M, N) and dtype (uint8 or uint16)
+            Input image.
+        footprint : ndarray
+            The neighborhood expressed as an ndarray of 1's and 0's.
+        out : ndarray of shape ([P,] M, N), same dtype as input `image`
+            If None, a new array is allocated.
+        mask : ndarray of dtype (int or float), optional
+            Mask array that defines (>0) area of the image included in the local
+            neighborhood. If None, the complete image is used (default).
+        shift_x, shift_y, shift_z : int
+            Offset added to the footprint center point. Shift is bounded to the
+            footprint sizes (center must be inside the given footprint).
+
+        Returns
+        -------
+        out : ([P,] M, N) ndarray, same dtype as `image`
+            Output image.
+  ```
+
+  Input image can be 3D, and arguments `shift_x`, `shift_y`, and `shift_z`.
+  But the `shift_` arguments appear, oddly, to be offsets in `i, j, k`
+  respectively of the `footprint`.   The first axis does appear to be special
+  in some way.
+
+* `src/skimage/restoration/deconvolution.py` :
+
+  ```rest
+  def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
+      """Richardson-Lucy deconvolution.
+
+      Parameters
+      ----------
+      image : ([P, ]M, N) ndarray
+         Input degraded image (can be n-dimensional). If you keep the
+         default `clip=True` parameter, you may want to normalize
+         the image so that its values fall in the [-1, 1] interval to avoid
+         information loss.
+      ...
+  ```
+
+  This ends up calling `scipy.signal.convolve` on the input array, so no semantic meaning to the axes, and docstring better put as:
+
+  ```rest
+      Parameters
+      ----------
+      image : N-D ndarray
+  ```
 
 ## x and y in variables and docstrings
 
@@ -389,3 +444,12 @@ In those cases, we should have the following policy:
 
   Suggest retaining this option in Skimage2, leaving with default `rc`
   behavior.  Perhaps we could deprecate at some later stage.
+
+
+## Documentation
+
+Edit:
+
+> CONTRIBUTING.rst:* Refer to array dimensions as (plane), row, column, not as
+x, y, z. See :ref:`Coordinate conventions
+<numpy-images-coordinate-conventions>` in the user guide for more information.
