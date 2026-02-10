@@ -287,9 +287,57 @@ which axis corresponds to the meaning "plane".   We should replace use of
 intention clear.   We should instead specify the plane axis, where necessary,
 with a `plane_axis=` keyword argument.
 
+### Plane in the codebase
 
+* `src/skimage/measure/_ccomp.pyx:    # Handle first plane`.  This is in
+  `scan3D`, called from `label_cython` in the same file.  Here the input array
+  `input_` is first axis-reordered to order axes in ascending size, before
+  calling `scan3D`, and the array is then axis-reordered to match input.
+  `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
+* `src/skimage/draw/draw.py`: `rectangle`.  `start` input argument is:
 
-Cursor identified multiple instances of row and column references in docstrings and variables.
+  ```rest
+    start : tuple
+        Origin point of the rectangle, e.g., ``([plane,] row, column)``.
+    end : tuple
+        End point of the rectangle ``([plane,] row, column)``.
+        For a 2D matrix, the slice defined by the rectangle is
+        ``[start:(end+1)]``.
+        Either `end` or `extent` must be specified.
+    extent : tuple
+        The extent (size) of the drawn rectangle.  E.g.,
+        ``([num_planes,] num_rows, num_cols)``.
+        Either `end` or `extent` must be specified.
+        A negative extent is valid, and will result in a rectangle
+        going along the opposite direction. If extent is negative, the
+        `start` point is not included.
+  ```
+
+  This does assume a semantic meaning to the first dimension, and to the
+  second and third, which are "row" and "column".  One option is to change docstring to:
+
+  ```
+    start : tuple
+        Origin point of the rectangle, e.g., ``(i, j, [k])``.
+    end : tuple
+        End point of the rectangle ``([i, j, [k])``.
+        For a 2D matrix, the slice defined by the rectangle is
+        ``[start:(end+1)]``.
+        Either `end` or `extent` must be specified.
+    extent : tuple
+        The extent (size) of the drawn rectangle.  E.g.,
+        ``(n_i, n_j[, n_k])``.
+        Either `end` or `extent` must be specified.
+        A negative extent is valid, and will result in a rectangle
+        going along the opposite direction. If extent is negative, the
+        `start` point is not included.
+  ```
+
+* Various `filter.rank` functions calling `_core_3D` in
+  `filters/rank/core_cy_3d.pyx`.  Input image is 3D, and arguments `shift_x`,
+  `shift_y`, and `shift_z`.  But these appear, oddly, to be offsets in `i, j,
+  k` respectively of the `footprint`.   The first axis does appear to be
+  special in some way.
 
 ## x and y in variables and docstrings
 
