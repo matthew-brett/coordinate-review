@@ -1,0 +1,103 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.16.6
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python}
+import inspect
+import itertools
+
+import numpy as np
+
+import skimage as ski
+import skimage.filters.rank as sfr
+```
+
+```{python}
+cell_4d = ski.data.cells3d()
+imgs = (cell_4d[:, 0],  # Membranes
+        cell_4d[:, 1],  # Nuclei
+        ski.data.brain())
+img = imgs[0]
+```
+
+```{python}
+img.shape
+```
+
+```{python}
+footprint = ski.morphology.footprint_rectangle([8, 9, 10])
+```
+
+```{python}
+filt_orig = sfr.equalize(img, footprint)
+```
+
+```{python}
+shift_args = ['shift_' + c for c in 'xyz']
+
+def shargs(shifts):
+    return dict(zip(shift_args, shifts))
+
+def rolled_filt(img, footprint, filt, axes, shifts=[0, 0, 0]):
+    r_img = np.transpose(img, axes)
+    r_shifts = np.array(shifts)[list(axes)]
+    r_fp = np.transpose(footprint, axes)
+    f_r_img = filt(r_img, r_fp, **shargs(r_shifts))
+    return np.transpose(f_r_img, np.argsort(axes))
+```
+
+```{python}
+filt_rolled = rolled_filt(img, footprint, sfr.equalize, (2, 1, 0))
+assert np.all(filt_rolled == filt_orig)
+```
+
+```{python}
+shifts = [1, 2, 3]
+filt_start = sfr.equalize(img, footprint,
+                          **shargs(shifts))
+filt_s_r = rolled_filt(img, footprint, sfr.equalize, (2, 1, 0),
+                       shifts)
+assert np.all(filt_start == filt_s_r)
+```
+
+```{python}
+filters = []
+for filt in sfr.__dict__.values():
+    if not callable(filt):
+        continue
+    params = list(inspect.signature(filt).parameters)
+    if params[1] != 'footprint':
+        continue
+    if params[4:7] == shift_args:
+        filters.append(filt)
+filters
+```
+
+```{python}
+orderings = set(itertools.permutations(range(3), 3))
+orderings.remove((0, 1, 2))
+```
+
+```{python}
+for filt in filters:
+    print(filt.__name__)
+    for i, img in enumerate(imgs):
+        filt_start = filt(img, footprint, **shargs(shifts))
+        print(f'Image {i}')
+        for order in orderings:
+            print(f'Ordering {order}')
+            filt_s_r = rolled_filt(img, footprint, filt,
+                                   order,
+                                   shifts)
+            assert np.all(filt_start == filt_s_r)
+```

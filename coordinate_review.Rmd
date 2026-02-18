@@ -295,7 +295,9 @@ with a `plane_axis=` keyword argument.
   calling `scan3D`, and the array is then axis-reordered to match input.
   `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
   This implies that we can roll axes and run algorithm, then roll back to get
-  the same result.  Test.
+  the same result.  Tested, provisionally confirmed in `label_example.ipynb`
+  — labels show 1 to 1 mapping when running label on rolled versions of binary
+  image.
 * `src/skimage/draw/draw.py`: `rectangle`.  `start` input argument is:
 
   ```rest
@@ -374,6 +376,30 @@ with a `plane_axis=` keyword argument.
   function in `filters/rank/core_cy_3d.pyx`.  `plane` is used in Cython
   function `_core_3D` and functions called therefrom.  So the question is
   — does `_core_3D` treat the first dimension as special in some way?
+  Testing suggests no — all filters with `shift_z` (allowing 3D) give the same
+  result applied directly, or applied after transposing axes in all
+  permutations, applying the filter, and retransposing.   Action: change
+  docstrings accordingly to `(i, j[, k])` rather than `([P,] M, N)`.
+
+  We have a problem for the `shift_` parameters.  Their meanings are different for 2D compared to 3D.  For 2D, `shift_x` means `shift_j`, `shift_y` means `shift_i`.  For 3D, `shift_x,y,z` mean `shift_i,j,k`.  So `x` and `y` mean different things for the 3D case.
+
+  We should deprecate `shift_{x,y,z}`, in favor of `shift_{i,j,k}` and make
+  keyword only.   The question is what to do for porting to Skimage 2, because the right port depends on the dimensionality of the image.
+
+  Searches:
+
+  ```/(autolevel|equalize|gradient|majority|maximum|mean|geometric_mean|subtract_mean|median|minimum|modal|enhance_contrast)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)`
+  ```
+
+  and
+
+  ```
+  /(pop|threshold|noise_filter|entropy|otsu|sum)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)
+  ```
+
+  Change
+  `shift_x` and `shift_y` for 2D to `shift_j`, `shift_i` respectively, and
+  make keyword only.  Rename `shift_`.
 
 * `src/skimage/restoration/deconvolution.py` :
 
