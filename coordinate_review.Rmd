@@ -204,10 +204,12 @@ thinking in terms of displayed 2D images.  The "row" axis is
 no longer the same as the "i" axis — if anything it is the "j"
 axis, where the "column" axis is the "k" axis.
 
-This is to point out that "row" carries a meaning in terms of
-how we think of the array, for 2D display.  In our example,
-the "row" axis might be the second axis, but then again, it
-depends how you think of the 3D image in terms of 2D.  We could also think of `img_3d` as a stack of 2D images, where displayed rows and columns are the first two dimensions, and the third is the last spatial dimension:
+This is to point out that "row" carries a meaning in terms of how we think of
+the array, for 2D display.  In our example, the "row" axis might be the second
+axis, but then again, it depends how you think of the 3D image in terms of 2D.
+We could also think of `img_3d` as a stack of 2D images, where displayed rows
+and columns are the first two dimensions, and the third is the last spatial
+dimension:
 
 ```{python}
 middle_k = img_3d.shape[2] // 2
@@ -224,6 +226,31 @@ In contrast, when we use "i", or "j" or "k" to label an axis,
 we intend no semantic meaning — we just refer to the first,
 second and third axis of an array, regardless of the meaning
 of these axes.
+
+## m and n are ambiguous labels
+
+In various places in Skimage1, we refer to axes as `M` or `N`.  For example,
+see the docstring listed in full further below for the `rank.equalize` filter:
+
+```rest
+    def equalize(image, footprint, out=None, mask=None, shift_x=0, shift_y=0, shift_z=0):
+        ...
+        image : ndarray of shape ([P,] M, N) and dtype (uint8 or uint16)
+            Input image.
+```
+
+Here `M` and `N` appear to mean (semantic) "row" and "column", because `P`
+should usually be taken to mean the plane axis.  However, elsewhere — for
+example in the `watershed` function whose docstring we list further below — we
+have:
+
+```rest
+    image : (M, N[, ...]) ndarray
+        Data array where the lowest value points are labeled first.
+```
+
+where `M`, `N` appear to mean `i`, `j`.   Given the ambiguity, we suggest
+dropping `M` and `N` as axis labels, in favor of `i` and `j`.
 
 ## Semantic and not-semantic labels
 
@@ -270,13 +297,14 @@ But — there may be situations where the semantic meaning,  in practice, always
 > a) Does "row" always mean the first axis, in practice?
 > b) Does "column" always mean the second axis, in practice?
 
-If so, the use of "row" and "column" is acceptable, and is a synonym for "i"
-and "j" in the "i, j" convention.
+If so, the use of "row" and "column" *may be* acceptable, and is a synonym for
+"i" and "j" in the "i, j" convention.
 
 Otherwise "row" and "column" are generally not acceptable, and need to be
 rephrased in terms of "i, j, k ...".
 
-Cursor identified multiple instances of row and column references in docstrings and variables.
+Cursor (the AI agent) identified multiple instances of row and column
+references in docstrings and variables.
 
 ## Skimage and planes
 
@@ -383,23 +411,53 @@ with a `plane_axis=` keyword argument.
 
   We have a problem for the `shift_` parameters.  Their meanings are different for 2D compared to 3D.  For 2D, `shift_x` means `shift_j`, `shift_y` means `shift_i`.  For 3D, `shift_x,y,z` mean `shift_i,j,k`.  So `x` and `y` mean different things for the 3D case.
 
-  We should deprecate `shift_{x,y,z}`, in favor of `shift_{i,j,k}` and make
-  keyword only.   The question is what to do for porting to Skimage 2, because the right port depends on the dimensionality of the image.
+  We should deprecate `shift_{x,y,z}`, in favor of a generic `shifts` argument, where the elements are in `i, j[, k]` order, and make
+  this keyword only.   The question is what message to give those using Skimage1, for porting to Skimage2.
 
-  Searches:
+  To note, Github searches suggest it is very rare to use not-default values for any of the `shift_{x,y,z}` parameters.
 
-  ```/(autolevel|equalize|gradient|majority|maximum|mean|geometric_mean|subtract_mean|median|minimum|modal|enhance_contrast)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)`
+  Here are the searches for keyword use, split into two because the full `|` search for all rank filter names returned too many results:
+
   ```
+  /(autolevel|equalize|gradient|majority|maximum|mean|geometric_mean|subtract_mean|pop)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)
+  ```
+
+  (Only [shift_z=1](https://github.com/NeuroDataDesign/mouselit/blob/dd11ee4a600f378c760cfb072027e331e00d70f2/ryan/3D%20Equalizer/Proof%20of%203D%20Equalization.ipynb#L240))
 
   and
 
   ```
-  /(pop|threshold|noise_filter|entropy|otsu|sum)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)
+  /(threshold|noise_filter|entropy|otsu|sum|median|minimum|modal|enhance_contrast)\(.*?,.*?,.*shift_[xyz]\s*=/ AND NOT path:skimage AND (path:.py OR path:.ipynb)
   ```
 
-  Change
-  `shift_x` and `shift_y` for 2D to `shift_j`, `shift_i` respectively, and
-  make keyword only.  Rename `shift_`.
+  (One non-default use of `shift_x`
+  [here](https://github.com/geojames/CNN-Supervised-Classification/blob/594326487372ff06e45aa8a06913fdd9b2aa90fe/code/CnnSupervisedClassification.py#L402);
+  [shift to upper left corner with x and
+  y](https://github.com/giuliapusc/guessTheSketch/blob/9a3f1a1387d0beb4a254da9c4b58166a1398255b/analysis/entropy_analysis.py#L25)
+
+  Plan: in Skimage2, make everything after `image, footprint` keyword only.
+  Remove `shift_{x,y,z}` arguments.  Add `shifts` argument with default None.
+  Shifts should be of same number of dimensions of `image` if specified, and
+  contain footprint shifts in `i, j, k` order.
+
+  Skimage1 wraps Skimage2 routine, and unpacks `shift_{x,y,z}` into `shifts`
+  accordingly.  Deprecation message on lines of (e.g. for `equalize`):
+
+  ```rest
+  For Skimage2 ``filters.rank.equalize``, all parameters after `footprint` are
+  keyword only.  In Skimage2, specify footprint shifts with `shifts` keyword
+  argument.  Specify shifts in `i, j[, k]` order.  Note that, for 2D images,
+  `shift_x` in Skimage1 corresponds to `j` (the second axis of the footprint)
+  and `shift_y` corresponds to `i` (first axis of footprint). Thus a call with
+  `shift_x=1, shift_y=2` for Skimage1 should become `shifts=(2, 1)` in
+  Skimage2, and a call with `shift_y=2` (and no `shift_x`) would be
+  `shifts=(2, 0)` in Skimage2.  For 3D images, in Skimage1, `shift_x`,
+  `shift_y`, and `shift_z` correspond to `i, j, k` (the first, second and
+  third axes of the footprint).  Thus a call with `shift_x=1, shift_y=2,
+  shift_z=3` in Skimage 1 would use `shifts=(1, 2, 3)` in Skimage2. A call
+  with `shift_y=2` (and no specification for `shift_x` or `shift_z`)
+  corresponds, in Skimage2, to `shifts=(0, 2, 0)`.
+  ```
 
 * `src/skimage/restoration/deconvolution.py` :
 
@@ -429,6 +487,15 @@ with a `plane_axis=` keyword argument.
 * `segmentation/_watershed.py` `watershed` function:
 
   ```rest
+  def watershed(
+      image,
+      markers=None,
+      connectivity=1,
+      offset=None,
+      mask=None,
+      compactness=0,
+      watershed_line=False,
+  ):
     """Find watershed basins in an image flooded from given markers.
 
     Parameters
