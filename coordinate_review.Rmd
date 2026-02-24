@@ -435,6 +435,9 @@ with a `plane_axis=` keyword argument.
   [shift to upper left corner with x and
   y](https://github.com/giuliapusc/guessTheSketch/blob/9a3f1a1387d0beb4a254da9c4b58166a1398255b/analysis/entropy_analysis.py#L25)
 
+  (Positional argument search rather harder, but I'll assume these are no more
+  common than by keyword).
+
   Plan: in Skimage2, make everything after `image, footprint` keyword only.
   Remove `shift_{x,y,z}` arguments.  Add `shifts` argument with default None.
   Shifts should be of same number of dimensions of `image` if specified, and
@@ -477,6 +480,8 @@ with a `plane_axis=` keyword argument.
 
   This ends up calling `scipy.signal.convolve` on the input array, so no
   semantic meaning to the axes, and docstring better put as:
+
+  Plan:
 
   ```rest
       Parameters
@@ -538,17 +543,14 @@ with a `plane_axis=` keyword argument.
         A labeled matrix of the same type and shape as `markers`.
   ```
 
-  This looks like it is an N-D function.
+  This looks like a generic N-D function.  However, tests in
+  `watershed_3d_axes.Rmd` show that running on a transposed image, and
+  re-transposing, does not give equivalent labels.  **Check**.  Provisional
+  plan: change `(M, N[, ...])` to `(i, j[, ...])`.
 
 Other instances (via `ripgrep`) of `plane` to review in code-base:
 
 ```
-tests/skimage/color/test_colorlabel.py:    # Labeling a 3D stack of duplicates gives the same result in each plane
-tests/skimage/color/test_colorlabel.py:    for labeled_plane in labeled_3d:
-tests/skimage/color/test_colorlabel.py:        assert_array_equal(labeled_plane, labeled_2d)
-tests/skimage/restoration/test_rolling_ball.py:    # infinite plane light source at top left corner
-src/skimage/measure/fit.py:        """Predict intersection of line model with orthogonal hyperplane.
-src/skimage/measure/fit.py:            Axis orthogonal to the hyperplane intersecting the line.
 src/skimage/graph/spath.py:    # Valid starting positions are anywhere on the hyperplane defined by
 src/skimage/graph/spath.py:    # hyperplane at position -1 along the same.
 src/skimage/graph/_mcp.pyx:    """Return an array with edge points/lines/planes/hyperplanes marked.
