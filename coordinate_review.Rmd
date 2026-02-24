@@ -319,10 +319,10 @@ with a `plane_axis=` keyword argument.
 
 ## Policy
 
-* We will prefer axis-order labels (I, J, ...) whenever possible.
+* We will prefer axis-order labels (i, j, ...) whenever possible.
 * Any reference to "row" and "column" in docstrings or variable names, that can
-  also be strictly interpreted as axis orders, should change to I, J... or i,
-  j ...
+  also be strictly interpreted as axis orders, should change to I, J... (number
+  of elements along axis) or i, j ... (index onto axes).
 * When we need the user to think about semantic meanings of axes, we should:
   * Explain that this is the case (and that this is not the default case),
   * Try to move any semantic labeling to keyword arguments, of form
