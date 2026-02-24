@@ -6,6 +6,8 @@ Partially distilled from AI summaries with:
 * Claude — Opus 4.5
 * Cursor — auto
 
+**Note** - items to check — search for `**Check**`.
+
 ## Background
 
 Let us imagine a 2D grayscale image.
@@ -315,7 +317,19 @@ which axis corresponds to the meaning "plane".   We should replace use of
 intention clear.   We should instead specify the plane axis, where necessary,
 with a `plane_axis=` keyword argument.
 
-### Plane in the codebase
+## Policy
+
+* We will prefer axis-order labels (I, J, ...) whenever possible.
+* Any reference to "row" and "column" in docstrings or variable names, that can
+  also be strictly interpreted as axis orders, should change to I, J... or i,
+  j ...
+* When we need the user to think about semantic meanings of axes, we should:
+  * Explain that this is the case (and that this is not the default case),
+  * Try to move any semantic labeling to keyword arguments, of form
+    `channel_axis=` and `plane_axis=`.
+  * Where this fails, make it clear in documentation that this is a special case.
+
+### Use of plane in the codebase
 
 * `src/skimage/measure/_ccomp.pyx:    # Handle first plane`.  This is in
   `scan3D`, called from `label_cython` in the same file.  Here the input array
@@ -545,8 +559,9 @@ with a `plane_axis=` keyword argument.
 
   This looks like a generic N-D function.  However, tests in
   `watershed_3d_axes.Rmd` show that running on a transposed image, and
-  re-transposing, does not give equivalent labels.  **Check**.  Provisional
-  plan: change `(M, N[, ...])` to `(i, j[, ...])`.
+  re-transposing, does not give equivalent labels.
+
+  **Check**.  Provisional plan: change `(M, N[, ...])` to `(i, j[, ...])`.
 
 Other instances (via `ripgrep`) of `plane` to review in code-base:
 
