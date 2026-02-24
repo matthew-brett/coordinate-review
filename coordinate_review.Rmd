@@ -329,7 +329,7 @@ with a `plane_axis=` keyword argument.
     `channel_axis=` and `plane_axis=`.
   * Where this fails, make it clear in documentation that this is a special case.
 
-### Use of plane in the codebase
+### Plans: use of plane in the codebase
 
 * `src/skimage/measure/_ccomp.pyx:    # Handle first plane`.  This is in
   `scan3D`, called from `label_cython` in the same file.  Here the input array
@@ -425,8 +425,10 @@ with a `plane_axis=` keyword argument.
 
   We have a problem for the `shift_` parameters.  Their meanings are different for 2D compared to 3D.  For 2D, `shift_x` means `shift_j`, `shift_y` means `shift_i`.  For 3D, `shift_x,y,z` mean `shift_i,j,k`.  So `x` and `y` mean different things for the 3D case.
 
-  We should deprecate `shift_{x,y,z}`, in favor of a generic `shifts` argument, where the elements are in `i, j[, k]` order, and make
-  this keyword only.   The question is what message to give those using Skimage1, for porting to Skimage2.
+  We should deprecate `shift_{x,y,z}`, in favor of a generic `shifts` argument,
+  where the elements are in `i, j[, k]` order, and make this keyword only.
+  The question is what message to give those using Skimage1, for porting to
+  Skimage2.
 
   To note, Github searches suggest it is very rare to use not-default values for any of the `shift_{x,y,z}` parameters.
 
@@ -450,7 +452,7 @@ with a `plane_axis=` keyword argument.
   y](https://github.com/giuliapusc/guessTheSketch/blob/9a3f1a1387d0beb4a254da9c4b58166a1398255b/analysis/entropy_analysis.py#L25)
 
   (Positional argument search rather harder, but I'll assume these are no more
-  common than by keyword).
+  common than by keyword, given shift arguments start (`shict_x`) at position 4 (fifth argument)).
 
   Plan: in Skimage2, make everything after `image, footprint` keyword only.
   Remove `shift_{x,y,z}` arguments.  Add `shifts` argument with default None.
