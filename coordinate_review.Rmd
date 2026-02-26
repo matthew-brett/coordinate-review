@@ -256,36 +256,32 @@ dropping `M` and `N` as axis labels, in favor of `i` and `j`.
 
 ## Semantic and not-semantic labels
 
-We will therefore call "row" and "column" and "plane"
-*semantic* axis labels, because each tells about what that
-particular axis means in terms of image display.
+We will therefore call "row" and "column" and "plane" *semantic* axis labels,
+because each tells about what that particular axis means in terms of image
+display.
 
-"i", "j" and "k" are non-semantic axis labels, and only refer
-to the first second and third axes of the array.
+"i", "j" and "k" are non-semantic axis labels, and only refer to the first
+second and third axes of the array.
 
 ## Convention and semantic labels
 
-In general, in code, when we use "row" or "column" or "plane"
-as axis labels, we would like to be able to predict which axes
-these refer to, in terms of the image.  The only way we can do
-that, short of having an array structure where we can
-explicitly label the axes (such as
-[xarray](https://docs.xarray.dev), is *by convention*.  That
-is, we always make sure that, for example, the "plane" axis is
-first, the "row" axis is second, and the "column" axis is
-third.
+In general, in code, when we use "row" or "column" or "plane" as axis labels,
+we would like to be able to predict which axes these refer to, in terms of the
+image.  The only way we can do that, short of having an array structure where
+we can explicitly label the axes (such as [xarray](https://docs.xarray.dev), is
+*by convention*.  That is, we always make sure that, for example, the "plane"
+axis is first, the "row" axis is second, and the "column" axis is third.
 
-Conventions can differ in different fields.  For example, in
-my own (MB) field of brain imaging, the convention is for 3D
-brain images to be row first, then columns, then plane, so
-"plane", by convention, is the last axis, not the first.
+Conventions can differ in different fields.  For example, in my own (MB) field
+of brain imaging, the convention is for 3D brain images to be row first, then
+columns, then plane, so "plane", by convention, is the last axis, not the
+first.
 
-In fact, you can already see conventions for axis positions in
-play with 2D color images.  Typically, we represent 2D color
-images with the three or four color channels running along the
-third axis. That is a typical (by convention) 2D color image
-is 3D, with rows as the first dimension, columns as the
-second, and color channel as the third.
+In fact, you can already see conventions for axis positions in play with 2D
+color images.  Typically, we represent 2D color images with the three or four
+color channels running along the third axis. That is a typical (by convention)
+2D color image is 3D, with rows as the first dimension, columns as the second,
+and color channel as the third.
 
 ## Skimage and row, column
 
@@ -566,10 +562,15 @@ with a `plane_axis=` keyword argument.
   **Check**.  Provisional plan: change `(M, N[, ...])` to `(I, J[, ...])`.
 
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
-  "plane" in the codebase, where reference does not refer to semantic labeling
-  of plane in array.
+  "plane" in the codebase, where reference does _not_ refer to semantic
+  labeling of plane in array.
 * See the "Not checked" section in `plane.md` for instances as above I have
   not checked yet.
+* See the "Checked" section in `mn.md` for other instances (via `grep`) of
+  "M, N" in the codebase, where reference does _not_ refer to semantic labeling
+  of plane in array.
+* See the "Not checked" section in `mn.md` for instances as above I have not
+  checked yet.
 
 Also see output of `rg "\(M\s*,\s*N"` on codebase in `mn.md`.  There are
 multiple instances of `M, N[, P]` etc.
