@@ -563,27 +563,13 @@ with a `plane_axis=` keyword argument.
   `watershed_3d_axes.Rmd` show that running on a transposed image, and
   re-transposing, does not give equivalent labels.
 
-  **Check**.  Provisional plan: change `(M, N[, ...])` to `(i, j[, ...])`.
+  **Check**.  Provisional plan: change `(M, N[, ...])` to `(I, J[, ...])`.
 
-Other instances (via `ripgrep`) of `plane` to review in code-base:
-
-```
-src/skimage/graph/spath.py:    # Valid starting positions are anywhere on the hyperplane defined by
-src/skimage/graph/spath.py:    # hyperplane at position -1 along the same.
-src/skimage/graph/_mcp.pyx:    """Return an array with edge points/lines/planes/hyperplanes marked.
-src/skimage/segmentation/_slic.pyx:    a cut-plane through the volume. So, if the order was (x, y, z) and
-src/skimage/segmentation/_slic.pyx:    we wanted to look at the 5th cut plane, we would write::
-src/skimage/segmentation/_slic.pyx:        my_z_plane = img3d[:, :, 5]
-src/skimage/segmentation/_slic.pyx:        my_z_plane = img3d[5]
-src/skimage/restoration/_denoise.py:    plane separately.
-src/skimage/restoration/_nl_means_denoising.pyx:    # Iterate over planes, taking padding into account
-src/skimage/restoration/_nl_means_denoising.pyx:        Shift along the plane axis.
-src/skimage/restoration/_nl_means_denoising.pyx:        Shift along the plane axis.
-src/skimage/restoration/_nl_means_denoising.pyx:        # Iterate over shifts along the plane axis
-src/skimage/restoration/_nl_means_denoising.pyx:                    # Iterate over planes, taking offset and shift into account
-src/skimage/restoration/_nl_means_denoising.pyx:    # Iterate over shifts along the plane axis
-src/skimage/restoration/_nl_means_denoising.pyx:                        # Iterate over planes, taking offset and shift into account
-```
+* See the "Checked" section in `plane.md` for other instances (via `grep`) of
+  "plane" in the codebase, where reference does not refer to semantic labeling
+  of plane in array.
+* See the "Not checked" section in `plane.md` for instances as above I have
+  not checked yet.
 
 Also see output of `rg "\(M\s*,\s*N"` on codebase in `mn.md`.  There are
 multiple instances of `M, N[, P]` etc.

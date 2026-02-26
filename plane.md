@@ -1,5 +1,8 @@
 # Instances of plane in codebase
 
+These are instances (via `ripgrep`) of `plane` in code-base, reviewed and not
+relevant, and not yet reviewed.
+
 ## Checked, not relevant
 
 * `src/skimage/graph/spath.py:    # Valid starting positions are
