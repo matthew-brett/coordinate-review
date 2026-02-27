@@ -32,31 +32,32 @@ coordinate.
 
 A coordinate is a pair of numbers identifying the pixel.
 
-For example, we may have a coordinate (5, 10).  To interpret
-this coordinate, we need to know what the 5 and 10 refer to.
-Put another way, we have to know what *coordinate axes* the
-5 and 10 relate to.  The coordinate axes specify a *coordinate
-system*.
+For example, we may have a coordinate (5, 10).  To interpret this coordinate,
+we need to know what the 5 and 10 refer to. Put another way, we have to know
+what *coordinate axes* the 5 and 10 relate to.  The coordinate axes specify
+a *coordinate system*.
 
 There are two common coordinate systems in imaging.
 
 ## The array coordinate system
 
 The first coordinate system will appear the most obvious to
-experienced users of Numpy — is is the array coordinate
-system, also know as the *matrix* or *linear algebra*
-coordinate system.  We will also call this the "i, j" coordinate system, for reasons that should become clear.
+experienced users of Numpy — it is the array coordinate system, also known as
+the *matrix* or *linear algebra* coordinate system.  We usually call this the
+"i, j" coordinate system, for reasons that should become clear.
 
-This interprets the first number (here 5) as the *position* along the first axis of the array, and the second number (here 10) as a position along the second axis of the array.
+The array / ij coordinate system interprets the first number (here 5) as the
+*position* along the first axis of the array, and the second number (here 10)
+as a position along the second axis of the array.
 
-In other words, the pixel at (5, 10), using the array coordinate system, is given by the Numpy operation:
+In other words, the pixel at (5, 10), using the array coordinate system, is
+given by the Numpy operation:
 
 ```{python}
 img[5, 10]
 ```
 
-So, in this case, the coordinate system is given by the array
-axes.
+So, in this case, the coordinate system is given by the array axes.
 
 Here is the `cameraman` image displayed in Matplotlib.
 
@@ -64,26 +65,28 @@ Here is the `cameraman` image displayed in Matplotlib.
 plt.imshow(img)
 ```
 
-Notice that, in terms of the image we have just displayed, the
-first axis is top to bottom, starting at 0, and the second
-axis is left to right, starting at 0.
+Notice that, in terms of the image we have just displayed, the first axis is
+top to bottom, starting at 0, and the second axis is left to right, starting
+at 0.
 
-We call this the "ij" coordinate system on the basis that "i"
-will always refer to the first array axis, and "j" to the
-second.  We chose "i" and "j" to have no particular meaning in
-terms of the way the image is displayed - to remind us that
-this meaning is strictly in terms of the axes of the image
+We call this the "ij" coordinate system on the basis that "i" will always
+refer to the first array axis, and "j" to the second.  We chose "i" and "j" to
+have no particular meaning in terms of the way the image is displayed - to
+remind us that this meaning is strictly in terms of the axes of the image
 array.
 
 ## The imaging coordinate system
 
-There is another common coordinate system in imaging, that we
-will call the *imaging coordinate system*, or the "x, y"
-coordinate system.
+There is another common coordinate system in imaging, that we will call the
+*imaging coordinate system*, or the "x, y" coordinate system.
 
-Very confusingly, the first axis in the imaging coordinate system corresponds to the *second* axis in the image array, and the second axis in the imaging coordinate system corresponds to the *first* axis in the image array.
+Very confusingly, the first axis in the imaging coordinate system corresponds
+to the *second* axis in the image array, and the second axis in the imaging
+coordinate system corresponds to the *first* axis in the image array.
 
-Imagine I have some coordinate (11, 20).  If that is a coordinate in the imaging coordinate system, then the equivalent pixel in that coordinate system is given by:
+Imagine I have some coordinate (11, 20).  If that is a coordinate in the
+imaging coordinate system, then the equivalent pixel in that coordinate system
+is given by:
 
 ```{python}
 img[20, 11]
