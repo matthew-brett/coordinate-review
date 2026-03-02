@@ -45,13 +45,26 @@ img = fimg
 ```
 
 ```{python}
-ws_orig = ss.watershed(img)
+# Marker generation code
+from scipy import ndimage as ndi
+
+def get_markers(image, connectivity=1, mask=None):
+    if mask is None:
+        # Use a complete `True` mask if none is provided
+        mask = np.ones(image.shape, bool)
+    markers_bool = ski.morphology.local_minima(image, connectivity=connectivity) * mask
+    footprint = ndi.generate_binary_structure(markers_bool.ndim, connectivity)
+    return ndi.label(markers_bool, structure=footprint)[0]
+```
+
+```{python}
+ws_orig = ss.watershed(img, get_markers(img))
 ```
 
 ```{python}
 def rolled_ws(img, axes):
     r_img = np.transpose(img, axes)
-    f_r_img = ss.watershed(r_img)
+    f_r_img = ss.watershed(r_img, get_markers(r_img))
     return np.transpose(f_r_img, np.argsort(axes))
 ```
 
