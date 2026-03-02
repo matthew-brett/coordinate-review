@@ -35,6 +35,16 @@ img.shape
 ```
 
 ```{python}
+# Greatly reduce image, and make unique
+less_img = img[:5, ::4, ::4]
+rng = np.random.default_rng()
+noise = rng.normal(0, 0.01, size=less_img.shape)
+fimg = ski.util.img_as_float64(less_img) + noise
+assert len(np.unique(fimg)) == fimg.size
+img = fimg
+```
+
+```{python}
 ws_orig = ss.watershed(img)
 ```
 
