@@ -631,6 +631,8 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   Provisional plan:
 
+  We should rewrite the docstring to remove the apparent assumption that the
+  channel axis is last, and the plane axis is first.  ... Rewrite Cython docstring to reflect transpose invariance for all axes but color.
 
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic
