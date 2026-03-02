@@ -195,19 +195,17 @@ img_2d = img_3d[middle_i, :, :]
 plt.imshow(img_2d)
 ```
 
-Where's the confusion?  Well — for a 2D image, we were happy
-to call the first array axis the "row" axis.  It's the row
-axis, because that axis represents rows in the displayed
-image.  For a 2D image, this is also the "i" axis, because
-it's the first axis.
+Where's the confusion?  Well — for a 2D image, we were happy to call the first
+array axis the "row" axis.  It's the row axis, because that axis represents
+rows in the displayed image.  For a 2D image, this is also the "i" axis,
+because it's the first axis.
 
-However, now we're in 3D, the first axis is no longer the
-"row" axis, because the row axis is the axis representing the
-rows in a 2D image.  So we now find ourselves wanting to call
-the second axis (of `img_3d`) the "row" axis, if we are
-thinking in terms of displayed 2D images.  The "row" axis is
-no longer the same as the "i" axis — if anything it is the "j"
-axis, where the "column" axis is the "k" axis.
+However, now we're in 3D, the first axis is no longer the "row" axis, because
+the row axis is the axis representing the rows in a 2D image.  So we now find
+ourselves wanting to call the second axis (of `img_3d`) the "row" axis, if we
+are thinking in terms of displayed 2D images.  The "row" axis is no longer the
+same as the "i" axis — if anything it is the "j" axis, where the "column" axis
+is the "k" axis.
 
 This is to point out that "row" carries a meaning in terms of how we think of
 the array, for 2D display.  In our example, the "row" axis might be the second
@@ -222,15 +220,13 @@ another_img_2d = img_3d[:, :, middle_k]
 plt.imshow(another_img_2d)
 ```
 
-So, "row" becomes ambiguous here — the axis we think of as
-corresponding to rows, depends on how we think of the image
-display.  That is, "row" is a *semantic* label for an axis,
-telling us what that axis means.
+So, "row" becomes ambiguous here — the axis we think of as corresponding to
+rows, depends on how we think of the image display.  That is, "row" is
+a *semantic* label for an axis, telling us what that axis means.
 
-In contrast, when we use "i", or "j" or "k" to label an axis,
-we intend no semantic meaning — we just refer to the first,
-second and third axis of an array, regardless of the meaning
-of these axes.
+In contrast, when we use "i", or "j" or "k" to label an axis, we intend no
+semantic meaning — we just refer to the first, second and third axis of an
+array, regardless of the meaning of these axes.
 
 ## m and n are ambiguous labels
 
@@ -593,6 +589,48 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Change `(M, N[, ...])` to `(I, J[, ...])`.  Consider adding note about ties
   and axis ordering in the code comments — it's probably too niche to put into
   the docstring.
+
+* `segmentation/slic_superpixels.py`: `slic` function.  Docstring:
+
+  ```rest
+  Segments image using k-means clustering in Color-(x,y,z) space.
+
+  Parameters
+  ----------
+  image : (M, N[, P][, C]) ndarray
+      Input image. Can be 2D or 3D, and grayscale or multichannel
+      (see `channel_axis` parameter).
+      Input image must either be NaN-free or the NaN's must be masked out.
+  ...
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  Related, we have this in the called `segmentation/_slic.pyx:_slic_cython` docstring:
+
+  ```rest
+  Helper function for SLIC segmentation.
+
+  Parameters
+  ----------
+  image_zyx : 4D array of np_floats, shape (Z, Y, X, C)
+      The input image.
+  mask : 3D array of bool, shape (Z, Y, X), optional
+      The input mask.
+  segments : 2D array of np_floats, shape (N, 3 + C)
+      The initial centroids obtained by SLIC as [Z, Y, X, C...].
+  ...
+  ```
+
+  Testing finds that `slic` is transpose invariant for the `cell3d` images,
+  but not for the `brain` image.  Gemini asserts that this is due to ties in
+  the k-means algorithm leading to slightly different regions within
+  background — see `ai_outputs/slic_transpose_invariance.md`.  Indeed the notebook `slic_3d_axes.ipynb` confirms invariance for a version of the brain image without ties.  That's good enough for now — along with some confirmation from someone who knows the algorithm.  Awaiting.
+
+  Provisional plan:
+
 
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic

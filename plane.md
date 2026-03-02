@@ -13,9 +13,12 @@ From `shortest_path` function.  Function is clearly N-D, but asks the
 user to specify (`axis=-1`) the "axis along which the path must always
 move forward".
 
+* `src/skimage/graph/_mcp.pyx:    """Return an array with edge points/lines/planes/hyperplanes marked.`
+
+Function is clearly N-D.  Points etc are terminology for edges in 1D, 2D ...
+
 ## Not checked
 
-* `src/skimage/graph/_mcp.pyx:    """Return an array with edge points/lines/planes/hyperplanes marked.`
 * `src/skimage/segmentation/_slic.pyx:    a cut-plane through the volume. So, if the order was (x, y, z) and`
 * `src/skimage/segmentation/_slic.pyx:    we wanted to look at the 5th cut plane, we would write::`
 * `src/skimage/segmentation/_slic.pyx:        my_z_plane = img3d[:, :, 5]`
