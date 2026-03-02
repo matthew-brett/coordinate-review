@@ -35,13 +35,19 @@ img.shape
 ```
 
 ```{python}
-# Greatly reduce image, and make unique
-less_img = img[:5, ::4, ::4]
+# Reduce image, and make unique
 rng = np.random.default_rng()
-noise = rng.normal(0, 0.01, size=less_img.shape)
-fimg = ski.util.img_as_float64(less_img) + noise
-assert len(np.unique(fimg)) == fimg.size
-img = fimg
+
+def proc_img(img):
+    less_img = img[:20, ::2, ::2]
+    noise = rng.normal(0, 0.01, size=less_img.shape)
+    fimg = ski.util.img_as_float64(less_img) + noise
+    assert len(np.unique(fimg)) == fimg.size
+    return fimg
+```
+
+```{python}
+imgs = [proc_img(img) for img in imgs]
 ```
 
 ```{python}
@@ -58,6 +64,7 @@ def get_markers(image, connectivity=1, mask=None):
 ```
 
 ```{python}
+img = imgs[0]
 ws_orig = ss.watershed(img, get_markers(img))
 ```
 
@@ -85,7 +92,7 @@ def assert_labels_equivalent(label_1, label_2):
 
 ```{python}
 ws_rolled = rolled_ws(img, (2, 1, 0))
-assert assert_labels_equivalent(ws_rolled, ws_orig)
+assert_labels_equivalent(ws_rolled, ws_orig)
 ```
 
 ```{python}
@@ -95,10 +102,10 @@ orderings.remove((0, 1, 2))
 
 ```{python}
 for i, img in enumerate(imgs):
-    ws_start = ss.watershed(img)
+    ws_start = ss.watershed(img, get_markers(img))
     print(f'Image {i}')
     for order in orderings:
         print(f'Ordering {order}')
         ws_s_r = rolled_ws(img, order)
-        assert assert_labels_equavalent(ws_s_r, ws_start)
+        assert_labels_equivalent(ws_s_r, ws_start)
 ```

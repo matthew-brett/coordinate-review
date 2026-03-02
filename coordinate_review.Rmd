@@ -328,7 +328,29 @@ with a `plane_axis=` keyword argument.
     `channel_axis=` and `plane_axis=`.
   * Where this fails, make it clear in documentation that this is a special case.
 
-### Plans: use of plane in the codebase
+## Plans: use of plane in the codebase
+
+Here I explore the code-base for a) routines that handle 3D images, and which
+b) may depend on knowing which of the three axes is the "plane" axis in a
+semantic sense.
+
+### Transpose invariance
+
+One tool I'll use is looking for *transpose invariance* of the function.  If
+the routine does not treat any axis as different from the others, then it may
+also be true that the following operations will give the same or equivalent
+output (`res` and `res_retp` are the same or equivalent) on a 3D image `img`:
+
+1. Run the function `res = func(img)`.
+2. Transpose the function with some axis `ordering` other than (0, 1, 2), run
+   `res_t = func(img.transpose(ordering))`, retranspose `res_t` suitably (in
+   fact with `np.argsort(ordering)`) to give `res_retp`.
+
+See `watershed_3d_axes.ipynb` for an example.
+
+If that is not true, then the function may not be transpose invariant, and I'll need to investigate further.
+
+### Plans and investigation by found 3D-capable routines
 
 * `src/skimage/measure/_ccomp.pyx:    # Handle first plane`.  This is in
   `scan3D`, called from `label_cython` in the same file.  Here the input array
@@ -558,11 +580,19 @@ with a `plane_axis=` keyword argument.
         A labeled matrix of the same type and shape as `markers`.
   ```
 
-  This looks like a generic N-D function.  However, tests in
-  `watershed_3d_axes.Rmd` show that running on a transposed image, and
-  re-transposing, does not give equivalent labels.
+  This looks like a generic N-D function.  However, tests of the type in
+  `watershed_3d_axes.ipynb` show that the function is not transpose invariant,
+  in the presence of tied values in the image.  This is expected, because, in
+  the presence of ties, ties identified first in the neighborhood get
+  processed first, and the axis ordering dictates the ordering of neighbors.
+  However, if I make the image values unique, the routine is transpose
+  invariant (see the notebook).
 
-  **Check**.  Provisional plan: change `(M, N[, ...])` to `(I, J[, ...])`.
+  Plan:
+
+  Change `(M, N[, ...])` to `(I, J[, ...])`.  Consider adding note about ties
+  and axis ordering in the code comments — it's probably too niche to put into
+  the docstring.
 
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic
