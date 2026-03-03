@@ -42,14 +42,14 @@ orderings = set(itertools.permutations(range(3), 3))
 orderings.remove((0, 1, 2))
 
 
-def assert_all_orders(imgs, func):
+def assert_all_orders(imgs, func, chk_func=assert_labels_equivalent):
     for i, img in enumerate(imgs):
         orig = func(img)
         print(f'Image {i}')
         for order in orderings:
             print(f'Ordering {order}')
             rolled = rolled_proc(img, order, func)
-            assert_labels_equivalent(rolled, orig)
+            chk_func(rolled, orig)
 
 
 def without_ties(img):

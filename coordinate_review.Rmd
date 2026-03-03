@@ -427,28 +427,28 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   `rank.equalize`, called with these inputs:
 
   ```rest
-    def equalize(image, footprint, out=None, mask=None, shift_x=0, shift_y=0, shift_z=0):
-        """Equalize image using local histogram.
+  def equalize(image, footprint, out=None, mask=None, shift_x=0, shift_y=0, shift_z=0):
+      """Equalize image using local histogram.
 
-        Parameters
-        ----------
-        image : ndarray of shape ([P,] M, N) and dtype (uint8 or uint16)
-            Input image.
-        footprint : ndarray
-            The neighborhood expressed as an ndarray of 1's and 0's.
-        out : ndarray of shape ([P,] M, N), same dtype as input `image`
-            If None, a new array is allocated.
-        mask : ndarray of dtype (int or float), optional
-            Mask array that defines (>0) area of the image included in the local
-            neighborhood. If None, the complete image is used (default).
-        shift_x, shift_y, shift_z : int
-            Offset added to the footprint center point. Shift is bounded to the
-            footprint sizes (center must be inside the given footprint).
+      Parameters
+      ----------
+      image : ndarray of shape ([P,] M, N) and dtype (uint8 or uint16)
+          Input image.
+      footprint : ndarray
+          The neighborhood expressed as an ndarray of 1's and 0's.
+      out : ndarray of shape ([P,] M, N), same dtype as input `image`
+          If None, a new array is allocated.
+      mask : ndarray of dtype (int or float), optional
+          Mask array that defines (>0) area of the image included in the local
+          neighborhood. If None, the complete image is used (default).
+      shift_x, shift_y, shift_z : int
+          Offset added to the footprint center point. Shift is bounded to the
+          footprint sizes (center must be inside the given footprint).
 
-        Returns
-        -------
-        out : ([P,] M, N) ndarray, same dtype as `image`
-            Output image.
+      Returns
+      -------
+      out : ([P,] M, N) ndarray, same dtype as `image`
+          Output image.
   ```
 
   Input image can be 3D, and arguments `shift_x`, `shift_y`, and `shift_z`. But
@@ -526,32 +526,32 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Docstring becomes:
 
   ```rest
-    def equalize(image, footprint, *, out=None, mask=None, shift=0):
-        """Equalize image using local histogram.
+  def equalize(image, footprint, *, out=None, mask=None, shift=0):
+      """Equalize image using local histogram.
 
-        Parameters
-        ----------
-        image : ndarray of shape (I, J,[, K]) and dtype (uint8 or uint16)
-            Input image.
-        footprint : ndarray
-            The neighborhood expressed as an ndarray of 1's and 0's.
-        out : ndarray of shape (I, J,[, K]), same dtype as input `image`, optional
-            If None, a new array is allocated.
-        mask : ndarray of dtype (int or float), optional
-            Mask array that defines (>0) area of the image included in the local
-            neighborhood. If None, the complete image is used (default).
-        shift : int or sequence, optional
-            Offsets added to the footprint center point. Shift is bounded to
-            the footprint sizes (center must be inside the given footprint).
-            If scalar, offset applies to all axes of the `footprint`.  If it
-            is a sequence, it should have the same number of elements as
-            `footprint` has axes, and the values should be in axis order
-            (first value applies to first axis, second to second, etc).
+      Parameters
+      ----------
+      image : ndarray of shape (I, J,[, K]) and dtype (uint8 or uint16)
+          Input image.
+      footprint : ndarray
+          The neighborhood expressed as an ndarray of 1's and 0's.
+      out : ndarray of shape (I, J,[, K]), same dtype as input `image`, optional
+          If None, a new array is allocated.
+      mask : ndarray of dtype (int or float), optional
+          Mask array that defines (>0) area of the image included in the local
+          neighborhood. If None, the complete image is used (default).
+      shift : int or sequence, optional
+          Offsets added to the footprint center point. Shift is bounded to
+          the footprint sizes (center must be inside the given footprint).
+          If scalar, offset applies to all axes of the `footprint`.  If it
+          is a sequence, it should have the same number of elements as
+          `footprint` has axes, and the values should be in axis order
+          (first value applies to first axis, second to second, etc).
 
-        Returns
-        -------
-        out : (I, J[, K]) ndarray, same dtype as `image`
-            Output image.
+      Returns
+      -------
+      out : (I, J[, K]) ndarray, same dtype as `image`
+          Output image.
   ```
 
 * `src/skimage/restoration/deconvolution.py` :
@@ -761,19 +761,96 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   The performance of this routine may depend on the memory ordering of the
   `image_ijkc`.   This routine was designed with the assumption that the array
   is C-contiguous, so that the last axis is the fastest-changing in memory,
-  and the first axis is the slowest-changing in memory.  As for most Numpy
-  routines, it will work with any memory ordering, but it may well be slower
-  for memory orderings other than C-contiguous.  Please benchmark your code if
-  peformance of this routine is important to you.  Please also consider
-  letting us know your results via our Github issues, so we have data with
-  which to optimize this routine.
+  and the first axis is the slowest-changing in memory.  As for standard
+  routines operating on Numpy arrays, this function will work with any memory
+  ordering, but it may well be slower for memory orderings other than
+  C-contiguous. Please benchmark your code if peformance of this routine is
+  important to you.  Please also consider letting us know your results via our
+  Github issues, so we have data with which to optimize this routine.
   ```
+
+* `denoise_wavelet` in `skimage/restoration/_denoise.py` has the following
+  docstring:
+
+  ```rest
+  Perform wavelet denoising on an image.
+
+  Parameters
+  ----------
+  image : ndarray (M[, N[, ...P]][, C]) of ints, uints or floats
+      Input data to be denoised. `image` can be of any numeric type,
+      but it is cast into an ndarray of floats for the computation
+      of the denoised image.
+  ...
+  ```
+
+  As for `watershed`, one can specify the `channel_axis`.
+  `denoise_3d_axes.ipynb` shows that this denoising is transpose invariant, at
+  least to fairly small tolerance.
+
+  Plan:
+
+  Rewrite docstring to:
+
+  ```rest
+  Perform wavelet denoising on an image.
+
+  Parameters
+  ----------
+  image : array of 2, 3 or 4 dimensions of ints, uints or floats
+      Input image to be denoised. Can be a 2D or 3D image, in grayscale
+      (`image` has 2 or 3 dimensions) or multichannel (`image` has 3 or
+      4 dimensions).  For multichannel images, use the `channel_axis`
+      parameter to specify the channel axis. `image` can be of any numeric
+      type, but it is cast into an ndarray of floats for the computation of
+      the denoised image.
+  ...
+  ```
+
+* `denoise_nl_means` in `skimage/restoration/non_local_means.py`.  Docstring
+  is:
+
+  ```rest
+  image : 2D or 3D ndarray
+      Input image to be denoised, which can be 2D or 3D, and grayscale
+      or RGB (for 2D images only, see ``channel_axis`` parameter). There can
+      be any number of channels (does not strictly have to be RGB).
+
+  ...
+
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  In fact, it seems that the routine will handle 3 or 4D images with a color
+  channel (up to 5 dimensional array).
+
+  `nl_means_3d_axes.ipynb` shows that the routine is transpose invariant;
+  therefore there is no special meaning that needs to be attached to a "plane"
+  axis.
+
+  There are various uses of the term "plane" in `skimage/restoration/_nl_means_denoising.pyx`.  Plane seems to always mean "slice along first axis".
+
+  Plan:
+
+  Rewrite docstring as:
+
+  ```rest
+  image : array of 2 to 5 dimensions
+      Input image. Can be a 2D, 3D or 4D image, in grayscale (`image` has 2,
+      3 or 4 dimensions) or multichannel (`image` has 3, 4 or 5 dimensions).
+      For multichannel images, use the `channel_axis` parameter to specify the
+      channel axis.  There can be any number of channels (does not strictly have to be RGB).
+  ...
+  ```
+
+  Replace uses of plane, row, column in Cython code with i, j, k.
 
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic
   labeling of plane in array.
-* See the "Not checked" section in `plane.md` for instances as above I have
-  not checked yet.
 * See the "Checked" section in `mn.md` for other instances (via `grep`) of
   "M, N" in the codebase, where reference does _not_ refer to semantic labeling
   of plane in array.

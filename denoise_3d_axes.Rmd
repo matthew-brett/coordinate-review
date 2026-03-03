@@ -18,24 +18,10 @@ import numpy as np
 import transpose_invariance as tpi
 
 import skimage as ski
-import skimage.segmentation as ss
 ```
 
 ```{python}
 imgs = tpi.get_3d_images()
-```
-
-```{python}
-def digitize(img, nbins):
-    mean = np.mean(img, axis=0)
-    bins = np.linspace(np.min(mean), np.max(mean), nbins)
-    flat_mean = mean.ravel()
-    bin_inds = np.digitize(flat_mean, bins)
-    return np.broadcast_to(np.reshape(bin_inds, mean.shape), img.shape)
-```
-
-```{python}
-imgs = [digitize(img, 50) for img in imgs]
 img = imgs[0]
 ```
 
@@ -44,16 +30,23 @@ img.shape
 ```
 
 ```{python}
-func = lambda img : ski.measure.label(img)
+def func(img):
+    return ski.restoration.denoise_wavelet(img)
+
 ws_orig = func(img)
 ```
 
 ```{python}
+def check_func(img1, img2):
+    assert np.allclose(img1, img2, atol=1e-5)
+```
+
+```{python}
 ws_rolled = tpi.rolled_proc(img, (2, 1, 0), func)
-tpi.assert_labels_equivalent(ws_rolled, ws_orig)
+check_func(ws_orig, ws_rolled)
 ```
 
 ```{python}
 # All images are transpose invariant
-tpi.assert_all_orders(imgs, func)
+tpi.assert_all_orders(imgs, func, chk_func=check_func)
 ```

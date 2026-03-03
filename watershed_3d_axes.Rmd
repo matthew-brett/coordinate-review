@@ -13,41 +13,21 @@ jupyter:
 ---
 
 ```{python}
-import inspect
-import itertools
-
 import numpy as np
+
+import transpose_invariance as tpi
 
 import skimage as ski
 import skimage.segmentation as ss
 ```
 
 ```{python}
-cell_4d = ski.data.cells3d()
-imgs = (cell_4d[:, 0],  # Membranes
-        cell_4d[:, 1],  # Nuclei
-        ski.data.brain())
+imgs = tpi.get_3d_images()
+```
+
+```{python}
+imgs = [tpi.without_ties(img) for img in imgs]
 img = imgs[0]
-```
-
-```{python}
-img.shape
-```
-
-```{python}
-# Reduce image, and make unique
-rng = np.random.default_rng()
-
-def proc_img(img):
-    less_img = img[:20, ::2, ::2]
-    noise = rng.normal(0, 0.01, size=less_img.shape)
-    fimg = ski.util.img_as_float64(less_img) + noise
-    assert len(np.unique(fimg)) == fimg.size
-    return fimg
-```
-
-```{python}
-imgs = [proc_img(img) for img in imgs]
 ```
 
 ```{python}
@@ -64,48 +44,16 @@ def get_markers(image, connectivity=1, mask=None):
 ```
 
 ```{python}
-img = imgs[0]
-ws_orig = ss.watershed(img, get_markers(img))
+func = lambda img : ss.watershed(img, get_markers(img))
+ws_orig = func(img)
 ```
 
 ```{python}
-def rolled_ws(img, axes):
-    r_img = np.transpose(img, axes)
-    f_r_img = ss.watershed(r_img, get_markers(r_img))
-    return np.transpose(f_r_img, np.argsort(axes))
+ws_rolled = tpi.rolled_proc(img, (2, 1, 0), func)
+tpi.assert_labels_equivalent(ws_rolled, ws_orig)
 ```
 
 ```{python}
-def assert_labels_equivalent(label_1, label_2):
-    uq_labels_1 = np.unique(label_1)
-    uq_labels_2 = np.unique(label_2)
-    assert np.all(uq_labels_1 == uq_labels_2)
-    unclaimed = list(uq_labels_2)
-    for label in uq_labels_1:
-        mask = label_1 == label
-        in_mask = label_2[mask]
-        label_other = in_mask[0]
-        assert np.all(in_mask == label_other)
-        unclaimed.remove(label_other)
-    assert len(unclaimed) == 0
-```
-
-```{python}
-ws_rolled = rolled_ws(img, (2, 1, 0))
-assert_labels_equivalent(ws_rolled, ws_orig)
-```
-
-```{python}
-orderings = set(itertools.permutations(range(3), 3))
-orderings.remove((0, 1, 2))
-```
-
-```{python}
-for i, img in enumerate(imgs):
-    ws_start = ss.watershed(img, get_markers(img))
-    print(f'Image {i}')
-    for order in orderings:
-        print(f'Ordering {order}')
-        ws_s_r = rolled_ws(img, order)
-        assert_labels_equivalent(ws_s_r, ws_start)
+# All images are transpose invariant
+tpi.assert_all_orders(imgs, func)
 ```
