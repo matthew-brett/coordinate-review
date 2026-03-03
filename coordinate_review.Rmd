@@ -467,7 +467,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   We have a problem for the `shift_` parameters.  Their meanings are different for 2D compared to 3D.  For 2D, `shift_x` means `shift_j`, `shift_y` means `shift_i`.  For 3D, `shift_x,y,z` mean `shift_i,j,k`.  So `x` and `y` mean different things for the 3D case.
 
-  We should deprecate `shift_{x,y,z}`, in favor of a generic `shifts` argument,
+  We should deprecate `shift_{x,y,z}`, in favor of a generic `shift` argument,
   where the elements are in `i, j[, k]` order, and make this keyword only.
   The question is what message to give those using Skimage1, for porting to
   Skimage2.
@@ -497,27 +497,29 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   common than by keyword, given shift arguments start (`shict_x`) at position 4 (fifth argument)).
 
   Plan: in Skimage2, make everything after `image, footprint` keyword only.
-  Remove `shift_{x,y,z}` arguments.  Add `shifts` argument with default None.
-  Shifts should be of same number of dimensions of `image` if specified, and
-  contain footprint shifts in `i, j, k` order.
+  Remove `shift_{x,y,z}` arguments.  Add `shift` argument with default 0.
+  Shifts should be either scalar, or of same number of dimensions of `image`
+  and contain footprint shifts in `i, j, k` order.  If scalar they repeat to the required number of dimensions, so `shift=2` for a 3D image is equivalent to `shift=(2, 2, 2)`.
 
-  Skimage1 wraps Skimage2 routine, and unpacks `shift_{x,y,z}` into `shifts`
+  Skimage1 wraps Skimage2 routine, and unpacks `shift_{x,y,z}` into `shift`
   accordingly.  Deprecation message on lines of (e.g. for `equalize`):
 
   ```rest
   For Skimage2 ``filters.rank.equalize``, all parameters after `footprint` are
-  keyword only.  In Skimage2, specify footprint shifts with `shifts` keyword
-  argument.  Specify shifts in `i, j[, k]` order.  Note that, for 2D images,
-  `shift_x` in Skimage1 corresponds to `j` (the second axis of the footprint)
-  and `shift_y` corresponds to `i` (first axis of footprint). Thus a call with
-  `shift_x=1, shift_y=2` for Skimage1 should become `shifts=(2, 1)` in
-  Skimage2, and a call with `shift_y=2` (and no `shift_x`) would be
-  `shifts=(2, 0)` in Skimage2.  For 3D images, in Skimage1, `shift_x`,
-  `shift_y`, and `shift_z` correspond to `i, j, k` (the first, second and
-  third axes of the footprint).  Thus a call with `shift_x=1, shift_y=2,
-  shift_z=3` in Skimage 1 would use `shifts=(1, 2, 3)` in Skimage2. A call
-  with `shift_y=2` (and no specification for `shift_x` or `shift_z`)
-  corresponds, in Skimage2, to `shifts=(0, 2, 0)`.
+  keyword only.  In Skimage2, specify footprint shifts with `shift` keyword
+  argument.  `shift` can be scalar (in which case the argument applies to all
+  axes of the footprint, or has the same number of elements as there are axes
+  in `image`. If `shift` is a sequence, specify shift in `i, j[, k]` order.
+  Note that, for 2D images, `shift_x` in Skimage1 corresponds to `j` (the
+  second axis of the footprint) and `shift_y` corresponds to `i` (first axis
+  of footprint). Thus a call with `shift_x=1, shift_y=2` for Skimage1 should
+  become `shift=(2, 1)` in Skimage2, and a call with `shift_y=2` (and no
+  `shift_x`) would be `shift=(2, 0)` in Skimage2.  For 3D images, in
+  Skimage1, `shift_x`, `shift_y`, and `shift_z` correspond to `i, j, k` (the
+  first, second and third axes of the footprint).  Thus a call with
+  `shift_x=1, shift_y=2, shift_z=3` in Skimage 1 would use `shift=(1, 2, 3)`
+  in Skimage2. A call with `shift_y=2` (and no specification for `shift_x` or
+  `shift_z`) corresponds, in Skimage2, to `shift=(0, 2, 0)`.
   ```
 
 * `src/skimage/restoration/deconvolution.py` :
@@ -681,15 +683,14 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   the k-means algorithm leading to slightly different regions within
   background — see `ai_outputs/slic_transpose_invariance.md`.  Indeed the
   notebook `slic_3d_axes.ipynb` confirms invariance for a version of the brain
-  image without ties.  That's good enough for now — along with some
-  confirmation from someone who knows the algorithm.  Otherwise, do some more
-  definitive investigation.  Awaiting response on Zulip.
+  image without ties.  [JNI asserted invariance on
+  Zulip](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/576963786).
 
   Note that the channel axis can be any axis, but the `channel_as_last_axis`
   decorator will transpose the channel axis to be the final axis before
   delegating to the function, and retranspose on output.
 
-  Provisional plan: (depending on confirmation of assumptions above)
+  Plan:
 
   Rewrite `slic`: docstring from the above, to:
 
