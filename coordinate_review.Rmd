@@ -379,7 +379,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   calling `scan3D`, and the array is then axis-reordered to match input.
   `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
   This implies that we can roll axes and run algorithm, then roll back to get
-  the same result.  Tested, provisionally confirmed in `label_example.ipynb`
+  the same result.  Tested, provisionally confirmed in `label_3d_axes.ipynb`
   — labels show 1 to 1 mapping when running label on rolled versions of binary
   image.
 * `src/skimage/draw/draw.py`: `rectangle`.  `start` input argument is:
@@ -496,7 +496,9 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   (Positional argument search rather harder, but I'll assume these are no more
   common than by keyword, given shift arguments start (`shict_x`) at position 4 (fifth argument)).
 
-  Plan: in Skimage2, make everything after `image, footprint` keyword only.
+  Plan:
+
+  In Skimage2, make everything after `image, footprint` keyword only.
   Remove `shift_{x,y,z}` arguments.  Add `shift` argument with default 0.
   Shifts should be either scalar, or of same number of dimensions of `image`
   and contain footprint shifts in `i, j, k` order.  If scalar they repeat to the required number of dimensions, so `shift=2` for a 3D image is equivalent to `shift=(2, 2, 2)`.
@@ -504,22 +506,52 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Skimage1 wraps Skimage2 routine, and unpacks `shift_{x,y,z}` into `shift`
   accordingly.  Deprecation message on lines of (e.g. for `equalize`):
 
+  ```rest For Skimage2 ``filters.rank.equalize``, all parameters after
+  `footprint` are keyword only.  In Skimage2, specify footprint shifts with
+  `shift` keyword argument.  `shift` can be scalar (in which case the argument
+  applies to all axes of the footprint), or it should have the same number of
+  elements as there are axes in `image`. If `shift` is a sequence, specify
+  shift in `i, j[, k]` order. Note that, for 2D images, `shift_x` in Skimage1
+  corresponds to `j` (the second axis of the footprint) and `shift_y`
+  corresponds to `i` (first axis of footprint). Thus a call with `shift_x=1,
+  shift_y=2` for Skimage1 should become `shift=(2, 1)` in Skimage2, and a call
+  with `shift_y=2` (and no `shift_x`) would be `shift=(2, 0)` in Skimage2.
+  For 3D images, in Skimage1, `shift_x`, `shift_y`, and `shift_z` correspond
+  to `i, j, k` (the first, second and third axes of the footprint).  Thus
+  a call with `shift_x=1, shift_y=2, shift_z=3` in Skimage 1 would use
+  `shift=(1, 2, 3)` in Skimage2. A call with `shift_y=2` (and no specification
+  for `shift_x` or `shift_z`) corresponds, in Skimage2, to `shift=(0, 2, 0)`.
+  ```
+
+  Docstring becomes:
+
   ```rest
-  For Skimage2 ``filters.rank.equalize``, all parameters after `footprint` are
-  keyword only.  In Skimage2, specify footprint shifts with `shift` keyword
-  argument.  `shift` can be scalar (in which case the argument applies to all
-  axes of the footprint, or has the same number of elements as there are axes
-  in `image`. If `shift` is a sequence, specify shift in `i, j[, k]` order.
-  Note that, for 2D images, `shift_x` in Skimage1 corresponds to `j` (the
-  second axis of the footprint) and `shift_y` corresponds to `i` (first axis
-  of footprint). Thus a call with `shift_x=1, shift_y=2` for Skimage1 should
-  become `shift=(2, 1)` in Skimage2, and a call with `shift_y=2` (and no
-  `shift_x`) would be `shift=(2, 0)` in Skimage2.  For 3D images, in
-  Skimage1, `shift_x`, `shift_y`, and `shift_z` correspond to `i, j, k` (the
-  first, second and third axes of the footprint).  Thus a call with
-  `shift_x=1, shift_y=2, shift_z=3` in Skimage 1 would use `shift=(1, 2, 3)`
-  in Skimage2. A call with `shift_y=2` (and no specification for `shift_x` or
-  `shift_z`) corresponds, in Skimage2, to `shift=(0, 2, 0)`.
+    def equalize(image, footprint, *, out=None, mask=None, shift=0):
+        """Equalize image using local histogram.
+
+        Parameters
+        ----------
+        image : ndarray of shape (I, J,[, K]) and dtype (uint8 or uint16)
+            Input image.
+        footprint : ndarray
+            The neighborhood expressed as an ndarray of 1's and 0's.
+        out : ndarray of shape (I, J,[, K]), same dtype as input `image`, optional
+            If None, a new array is allocated.
+        mask : ndarray of dtype (int or float), optional
+            Mask array that defines (>0) area of the image included in the local
+            neighborhood. If None, the complete image is used (default).
+        shift : int or sequence, optional
+            Offsets added to the footprint center point. Shift is bounded to
+            the footprint sizes (center must be inside the given footprint).
+            If scalar, offset applies to all axes of the `footprint`.  If it
+            is a sequence, it should have the same number of elements as
+            `footprint` has axes, and the values should be in axis order
+            (first value applies to first axis, second to second, etc).
+
+        Returns
+        -------
+        out : (I, J[, K]) ndarray, same dtype as `image`
+            Output image.
   ```
 
 * `src/skimage/restoration/deconvolution.py` :
