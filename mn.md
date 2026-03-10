@@ -6,109 +6,24 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Checked
 
+* `src/skimage/future/manual_segmentation.py:    image : (M, N[, 3]) array`
+* `src/skimage/future/manual_segmentation.py:    image : (M, N[, 3]) array`
+  Zulip reply - future should not be ported.
+* `src/skimage/io/_plugins/matplotlib_plugin.py:    image : array, shape (M, N[, 3])`
+  Zulip reply - not porting.
+
 ## Not yet checked
 
-* `src/skimage/future/manual_segmentation.py:    image : (M, N[, 3]) array`
-* `src/skimage/future/manual_segmentation.py:    image : (M, N[, 3]) array`
-* `src/skimage/draw/draw.py:    image : ndarray of shape (M, N, C)`
-* `src/skimage/draw/draw3d.py:    ellipsoid : (M, N, P) array`
-* `src/skimage/graph/_rag.py:    image : ndarray, shape(M, N[, ..., P], 3)`
-* `src/skimage/graph/_rag.py:    labels : ndarray, shape(M, N[, ..., P])`
-* `src/skimage/graph/_rag.py:        `image`. If `image` has dimensions `(M, N, 3)` `labels` should have`
-* `src/skimage/graph/_rag.py:        dimensions `(M, N)`.`
-* `src/skimage/graph/_rag.py:    labels : ndarray, shape (M, N)`
-* `src/skimage/graph/_rag.py:    image : ndarray, shape (M, N[, 3])`
-* `src/skimage/filters/rank/_percentile.py:    image : ndarray of shape (M, N) and dtype (uint8 or uint16)`
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N), same dtype as input `image``
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N), same dtype as input `image``
-* `src/skimage/filters/rank/_percentile.py:    image : ndarray of shape (M, N) and dtype (uint8 or uint16)`
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N) and dtype int`
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N) and dtype int`
-* `src/skimage/filters/rank/_percentile.py:    image : ndarray of shape (M, N) and dtype (uint8 or uint16)`
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N) and dtype int`
-* `src/skimage/filters/rank/_percentile.py:    out : ndarray of shape (M, N) and dtype int`
-* `src/skimage/filters/lpi_filter.py:        data : ndarray of shape (M, N)`
-* `src/skimage/filters/lpi_filter.py:    data : ndarray of shape (M, N)`
-* `src/skimage/filters/lpi_filter.py:    data : ndarray of shape (M, N)`
-* `src/skimage/filters/lpi_filter.py:    data : ndarray of shape (M, N)`
-* `src/skimage/filters/lpi_filter.py:    K : float or ndarray of shape (M, N)`
-* `src/skimage/io/_plugins/matplotlib_plugin.py:    image : array, shape (M, N[, 3])`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/edges.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/edges.py:    mask : ndarray of shape (M, N), optional`
-* `src/skimage/filters/edges.py:    output : ndarray of shape (M, N) and dtype float`
-* `src/skimage/segmentation/_watershed.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/segmentation/_watershed.py:    markers : int, or (M, N[, ...]) ndarray of int, optional`
-* `src/skimage/segmentation/_watershed.py:    mask : (M, N[, ...]) ndarray of bools or 0's and 1's, optional`
-* `src/skimage/segmentation/_chan_vese.py:    image : ndarray of shape (M, N)`
-* `src/skimage/segmentation/_chan_vese.py:    init_level_set : str or (M, N) ndarray, optional`
-* `src/skimage/segmentation/_chan_vese.py:    segmentation : ndarray of shape (M, N) and dtype bool`
-* `src/skimage/segmentation/_chan_vese.py:    phi : ndarray of shape (M, N) and dtype float`
-* `src/skimage/filters/thresholding.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/thresholding.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    threshold : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray, optional`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray, optional`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    threshold : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    threshold : (M, N[, ...]) ndarray`
-* `src/skimage/filters/thresholding.py:    image : (M, N[, ...]) ndarray, optional`
-* `src/skimage/io/_io.py:    arr : ndarray of shape (M, N[, C]), with C=3 or C=4`
-* `src/skimage/segmentation/_quickshift_cy.pyx:    image : (M, N, C) ndarray`
-* `src/skimage/segmentation/_quickshift_cy.pyx:    segment_mask : (M, N) ndarray`
-* `src/skimage/filters/_sparse.py:    image : ndarray, dtype float, shape (M, N[, ...], P)`
-* `src/skimage/filters/_sparse.py:    result : array of float, shape (M, N[, ...], P)`
-* `src/skimage/segmentation/morphsnakes.py:    image : (M, N) or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    gimage : (M, N) or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    image : (M, N) or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    init_level_set : str, (M, N) array, or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    out : (M, N) or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    gimage : (M, N) or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    init_level_set : str, (M, N) array, or (L, M, N) array`
-* `src/skimage/segmentation/morphsnakes.py:    out : (M, N) or (L, M, N) array`
 * `src/skimage/transform/hough_transform.py:    hspace : ndarray, shape (M, N)`
 * `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
 * `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
 * `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
 * `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
 * `src/skimage/transform/hough_transform.py:    hspaces : (M, N, P) array`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
 * `src/skimage/transform/_warps.py:    image : (M, N[, ...][, C]) ndarray`
 * `src/skimage/transform/_warps.py:    a : (M, N) or (M, N, P) ndarray`
 * `src/skimage/transform/_warps.py:    b : (M, N)`
@@ -135,14 +50,8 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 * `src/skimage/filters/_gabor.py:    real, imag : ndarray of shape (M, N)`
 * `src/skimage/segmentation/_felzenszwalb_cy.pyx:    image : (M, N, C) ndarray`
 * `src/skimage/segmentation/_felzenszwalb_cy.pyx:    segment_mask : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
 * `src/skimage/transform/_geometric.py:    src : (M, N) array_like`
 * `src/skimage/transform/_geometric.py:    dst : (M, N) array_like`
-* `src/skimage/segmentation/_quickshift.py:    image : ndarray of shape (M, N, C)`
-* `src/skimage/segmentation/_quickshift.py:    segment_mask : ndarray of shape (M, N) and dtype int`
 * `src/skimage/transform/_warps_cy.pyx:    image : ndarray, shape (M, N)`
 * `src/skimage/segmentation/_felzenszwalb.py:    image : ndarray of shape (M, N[, 3])`
 * `src/skimage/segmentation/_felzenszwalb.py:    segment_mask : ndarray of shape (M, N)`

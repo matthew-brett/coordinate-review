@@ -506,21 +506,22 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Skimage1 wraps Skimage2 routine, and unpacks `shift_{x,y,z}` into `shift`
   accordingly.  Deprecation message on lines of (e.g. for `equalize`):
 
-  ```rest For Skimage2 ``filters.rank.equalize``, all parameters after
-  `footprint` are keyword only.  In Skimage2, specify footprint shifts with
-  `shift` keyword argument.  `shift` can be scalar (in which case the argument
-  applies to all axes of the footprint), or it should have the same number of
-  elements as there are axes in `image`. If `shift` is a sequence, specify
-  shift in `i, j[, k]` order. Note that, for 2D images, `shift_x` in Skimage1
-  corresponds to `j` (the second axis of the footprint) and `shift_y`
-  corresponds to `i` (first axis of footprint). Thus a call with `shift_x=1,
-  shift_y=2` for Skimage1 should become `shift=(2, 1)` in Skimage2, and a call
-  with `shift_y=2` (and no `shift_x`) would be `shift=(2, 0)` in Skimage2.
-  For 3D images, in Skimage1, `shift_x`, `shift_y`, and `shift_z` correspond
-  to `i, j, k` (the first, second and third axes of the footprint).  Thus
-  a call with `shift_x=1, shift_y=2, shift_z=3` in Skimage 1 would use
-  `shift=(1, 2, 3)` in Skimage2. A call with `shift_y=2` (and no specification
-  for `shift_x` or `shift_z`) corresponds, in Skimage2, to `shift=(0, 2, 0)`.
+  ```rest
+  For Skimage2 ``filters.rank.equalize``, all parameters after `footprint` are
+  keyword only.  In Skimage2, specify footprint shifts with `shift` keyword
+  argument.  `shift` can be scalar (in which case the argument applies to all
+  axes of the footprint), or it should have the same number of elements as
+  there are axes in `image`. If `shift` is a sequence, specify shift in `i,
+  j[, k]` order. Note that, for 2D images, `shift_x` in Skimage1 corresponds
+  to `j` (the second axis of the footprint) and `shift_y` corresponds to `i`
+  (first axis of footprint). Thus a call with `shift_x=1, shift_y=2` for
+  Skimage1 should become `shift=(2, 1)` in Skimage2, and a call with
+  `shift_y=2` (and no `shift_x`) would be `shift=(2, 0)` in Skimage2. For 3D
+  images, in Skimage1, `shift_x`, `shift_y`, and `shift_z` correspond to `i,
+  j, k` (the first, second and third axes of the footprint).  Thus a call with
+  `shift_x=1, shift_y=2, shift_z=3` in Skimage 1 would use `shift=(1, 2, 3)`
+  in Skimage2. A call with `shift_y=2` (and no specification for `shift_x` or
+  `shift_z`) corresponds, in Skimage2, to `shift=(0, 2, 0)`.
   ```
 
   Docstring becomes:
@@ -848,14 +849,300 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   Replace uses of plane, row, column in Cython code with i, j, k.
 
+* `draw.draw3d` has `ellipsoid` with docstring:
+
+  ```rest
+  Parameters
+  ----------
+  a : float
+      Length of semi-axis along x-axis.
+  b : float
+      Length of semi-axis along y-axis.
+  c : float
+      Length of semi-axis along z-axis.
+  spacing : 3-tuple of floats
+      Grid spacing in three spatial dimensions.
+  levelset : bool
+      If True, returns the level set for this ellipsoid (signed level
+      set about zero, with positive denoting interior) as np.float64.
+      False returns a binarized version of said level set.
+
+  Returns
+  -------
+  ellipsoid : (M, N, P) array
+      Ellipsoid centered in a correctly sized array for given `spacing`.
+      Boolean dtype unless `levelset=True`, in which case a float array is
+      returned with the level set above 0.0 representing the ellipsoid.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  a : float
+      Length of semi-axis along i-axis.
+  b : float
+      Length of semi-axis along j-axis.
+  c : float
+      Length of semi-axis along k-axis.
+  spacing : 3-tuple of floats
+      Grid spacing in three image dimensions.
+  levelset : bool
+      If True, returns the level set for this ellipsoid (signed level
+      set about zero, with positive denoting interior) as np.float64.
+      False returns a binarized version of said level set.
+
+  Returns
+  -------
+  ellipsoid : (I, J, K) array
+      Ellipsoid centered in a correctly sized array for given `spacing`.
+      Boolean dtype unless `levelset=True`, in which case a float array is
+      returned with the level set above 0.0 representing the ellipsoid.
+  ```
+
+  Similarly for similar arguments in `ellipsoid_stats` function in same
+  module.
+
+* `rag_mean_color` in `src/skimage/graph/_rag.py`.  Docstring:
+
+  ```rest
+  image : ndarray, shape(M, N[, ..., P], 3)
+      Input image.
+  labels : ndarray, shape(M, N[, ..., P])
+      The labelled image. This should have one dimension less than
+      `image`. If `image` has dimensions `(M, N, 3)` `labels` should have
+      dimensions `(M, N)`.
+  ```
+
+  Plan:
+
+  (Assuming `channel_axis=`):
+
+  ```rest
+  image : N-D ndarray
+      Input image.  One or no axis can contain channel (color) information
+      (see `channel_axis` argument).  For example the input image can have
+      3 axes (I, J, C) where the last represents color (`channel_axis` default
+      is -1).
+  labels : N-D or N-1-D ndarray
+      The labelled image. If one axis of `image` is a color axis, `labels`
+      should have one dimension less than `image`, otherwise, `labels` should
+      have dimensions matching `image`.  For example, if `image` has
+      dimensions `(I, J, 3)` and `channel_axis=-1` (the default), then
+      `labels` should have dimensions `(I, J)`.  If `image` has dimensions
+      `(I, J)` and `channel_axis=None`, then labels should also have
+      dimensions `(I, J)`.
+
+  ...
+
+  channel_axis : int or None, optional
+      If None, the `image` is assumed to be a grayscale (single channel)
+      image. Otherwise, this parameter indicates which axis of the array
+      corresponds to channels.
+  ```
+
+* `show_rag` in `src/skimage/graph/_rag.py`.  Docstring:
+
+  ```rest
+  labels : ndarray, shape (M, N)
+      The labelled image.
+  rag : RAG
+      The Region Adjacency Graph.
+  image : ndarray, shape (M, N[, 3])
+      Input image. If `colormap` is `None`, the image should be in RGB
+      format.
+
+  ...
+
+  img_cmap : :py:class:`matplotlib.colors.Colormap`, optional
+      Any matplotlib colormap with which the image is draw. If set to `None`
+      the image is drawn as it is.
+  ```
+
+  Plan:
+
+  ```
+  labels : ndarray, shape (I, J)
+      The labelled image.
+  rag : RAG
+      The Region Adjacency Graph.
+  image : N-D ndarray
+      Input image.  If `channel_axis` is not None (default is -1), then image
+      will have an extra axis relative to `labels`, with axis positiion
+      indicated by `channel_axis`. If `channel_axis` is None then `image`
+      should be same shape as `labels`.  If `img_cmap` is `None` (default is
+      `'bone'`), the image should be in RGB format with channel axis indicated
+      by `channel_axis`.  For example, if `labels` is shape (I, J), and
+      `channel_axis=-1` (the default), then `image` should be shape (I, J, C),
+      where C is the length of the color axis (3 or 4).
+  ...
+
+  img_cmap : :py:class:`matplotlib.colors.Colormap`, optional
+      Any matplotlib colormap with which the image is drawn. If set to `None`
+      the image is drawn using `image` colors from the `channel_axis`.
+
+  ...
+
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+* `autolevel_percentile`, `gradient_percentile`, `mean_percentile`, in
+  `skimage/filters/rank/_percentile.py`.  Docstrings have form:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (M, N) and dtype (uint8 or uint16)
+      Input image.
+  footprint : ndarray of shape (m, n)
+      The neighborhood expressed as a 2-D array of 1's and 0's.
+  out : ndarray of shape (M, N) and dtype int
+      If None, a new array is allocated.
+  mask : ndarray
+      Mask array that defines (>0) area of the image included in the local
+      neighborhood. If None, the complete image is used (default).
+  shift_x, shift_y : int
+      Offset added to the footprint center point. Shift is bounded to the
+      footprint sizes (center must be inside the given footprint).
+  p0, p1 : float, optional, in interval [0, 1]
+      Define the [p0, p1] percentile interval to be considered for computing
+      the value.
+
+  Returns
+  -------
+  out : ndarray of shape (M, N) and dtype int
+      Output image.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (I, J) and dtype (uint8 or uint16)
+      Input image.
+  footprint : ndarray of shape (A, B)
+      The neighborhood expressed as a 2-D array of 1's and 0's.
+  out : ndarray of shape (I, J) and dtype int
+      If None, a new array is allocated.
+  mask : ndarray
+      Mask array that defines (>0) area of the image included in the local
+      neighborhood. If None, the complete image is used (default).
+  shift_x, shift_y : int
+      Offset added to the footprint center point. Shift is bounded to the
+      footprint sizes (center must be inside the given footprint).
+  p0, p1 : float, optional, in interval [0, 1]
+      Define the [p0, p1] percentile interval to be considered for computing
+      the value.
+
+  Returns
+  -------
+  out : ndarray of shape (I, J) and dtype int
+      Output image.
+  ```
+
+* In `skimage/filters/lpi_filter.py`: several instances of `(M, N)`.  Can all
+  be replaced with `(I, J)`.  Similarly, various instances of `\(r, c, ...)`.
+  Can be replaced with `(i, j, ...)` with associated renaming of `r` and `c`
+  in variables and docstrings.
+
+* `skimage/filters/edges.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.
+
+* `skimage/segmentation/_chan_vese.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.
+
+* `skimage/segmentation/thresholding.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
+  `(I, J[, ...])`.
+
+* `skimage/io/_io.py`: `imsave`. Docstring:
+
+  ```rest
+  Parameters
+  ----------
+  fname : str or pathlib.Path
+      Target filename.
+  arr : ndarray of shape (M, N[, C]), with C=3 or C=4
+      Image data.
+  check_contrast : bool, optional
+      Check for low contrast and print warning (default: True).
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  fname : str or pathlib.Path
+      Target filename.
+  arr : 2 or 3 dimensional ndarray
+      Image data. If a 2D array, this is a grayscale image.  If a 3D array,
+      this is a color image, with one axis (specified by `channel_axis`,
+      default -1) giving color information.  This axis, if present, should be length 3 or 4.
+  check_contrast : bool, optional
+      Check for low contrast and print warning (default: True).
+  channel_axis : int or None, optional
+      We ignore this parameter for 2D `arr`.  If `arr` is 3D, `channel_axis`
+      indicates which axis of the array corresponds to color channels.  Before
+      saving the image, the function moves the channel axis to be the final
+      axis, for compatibility with the libraries we use to save the data.
+  ```
+
+  We will need to do something to allow raising errors if the image is 2D and
+  `channel_axis` is not in (None, -1).  I guess we can just put another
+  decorator to run before `channel_as_last_axis`.  Or we can specify
+  `channel_arg_positions=1` to `channel_as_last_axis` and check whether there
+  are in fact 3 dimensions in the `channel_as_last_axis` decorator.
+  Specifically around current line 620, check if the selected `arg` does in
+  fact have three or more dimensions, and raise an error if not — see
+  <https://github.com/scikit-image/scikit-image/pull/8https://github.com/scikit-image/scikit-image/pull/808308>
+  and [Zulip
+  discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
+  (and following).
+
+* `src/skimage/segmentation/_quickshift.py`: `quickshift`:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (M, N, C)
+      Input image. The axis corresponding to color channels can be specified
+      via the `channel_axis` argument.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 3D ndarray
+      Input image. The axis corresponding to color channels can be specified
+      via the `channel_axis` argument.
+  ```
+* `src/skimage/segmentation/_quickshift_cy.pyx` - replace `(M, N, C)` and `(M,
+  N)` with `(I, J, C)` and `(I, J)` throughout.
+* `src/skimage/filters/_sparse.py`: — replace `(M, N[, ...], P)` with `(I, J[,
+  ...], K)`, `(M, N)` with `(I, J)`.
+* `src/skimage/filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
+  `(I, J, K)` and `(I, J)` throughout.
+* `src/skimage/transform/hough_transform.py`: — replace `(M, N)` with and `(I,
+  J)` throughout.  There is much else to do for coordinates in the
+  `hough_transform` module — we need to rephrase outputs in terms of ij,
+  instead of xy, including angles.  See below.
+
+* See the "Not checked" section in `mn.md` for instances as above I have not
+  checked yet.
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic
   labeling of plane in array.
 * See the "Checked" section in `mn.md` for other instances (via `grep`) of
   "M, N" in the codebase, where reference does _not_ refer to semantic labeling
   of plane in array.
-* See the "Not checked" section in `mn.md` for instances as above I have not
-  checked yet.
 
 Also see output of `rg "\(M\s*,\s*N"` on codebase in `mn.md`.  There are
 multiple instances of `M, N[, P]` etc.
@@ -910,6 +1197,209 @@ In those cases, we should have the following policy:
 
   Suggest retaining this option in Skimage2, leaving with default `rc`
   behavior.  Perhaps we could deprecate at some later stage.
+
+* `skimage/feature/peak.py`: `_prominent_peaks`.  Docstring:
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N) ndarray
+      Input image.
+  min_xdistance : int
+      Minimum distance separating features in the x dimension.
+  min_ydistance : int
+      Minimum distance separating features in the y dimension.
+  threshold : float
+      Minimum intensity of peaks. Default is `0.5 * max(image)`.
+  num_peaks : int
+      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
+      return `num_peaks` coordinates based on peak intensity.
+
+  Returns
+  -------
+  intensity, xcoords, ycoords : tuple of array
+      Peak intensity values, x and y indices.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : (I, J) ndarray
+      Input image.
+  min_distance : int or sequence
+      Minimum distance separating features in each dimension. Can be scalar,
+      in which case corresponds to ``(m, m)`` (where ``m`` is the value of
+      `min_distance`).
+  threshold : float
+      Minimum intensity of peaks. Default is `0.5 * max(image)`.
+  num_peaks : int
+      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
+      return `num_peaks` coordinates based on peak intensity.
+
+  Returns
+  -------
+  intensity, i_coords, j_coords : tuple of array
+      Peak intensity values, i and j indices.
+  ```
+
+  Docstring for Skimage1:
+
+  ```rest
+  There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
+
+  The first is that Skimage2 returns image coordinates in reversed order to that in Skimage1.  `Skimage2` returns the `intensity`, followed by the *column* coordinates in the array (`x_coords`) followed by the *row* cooordinates (`y_coords`).   In contrast, Skimage2 returns the intensity, followed by the *row* (first / 'i' axis) coordinates, followed by the *column* coordinates (second / 'j' axis).  This is for consistency with other Skimage2 routines.
+
+  The second is that Skimage2 specifes minimum distances with `min_distance`
+  keyword argument, instead of `min_distanc_x` and `min_distance_y` arguments.
+  `min_distance` can be scalar (in which case the argument applies to both
+  axes of the image), or it should be a sequence of length 2. If
+  `min_distance` is a sequence, specify shift in `i, j` order.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> intensity, col_coords, row_coords = ski1.feature._prominent_peaks(
+  ...     img, min_distance_x=1, min_distance_y=2)
+  >>> # Skimage2.  Note reversal of second and third return arguments,
+  >>> # and min_distance specified in row, column (i, j) order.
+  >>> intensity, row_coords, col_coords = ski2.feature._prominent_peaks(
+  ...     img, min_distance=(2, 1)
+
+  ```
+
+  Having said that, searching Github, I could find [maybe one
+  attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
+  at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
+
+* `skimage/transform/_warps.py`: `swirl`
+
+* `skimage/transform/_warps.py`: `rotate`
+
+  ```rest
+  """Rotate image by a certain angle around its center.
+
+  Parameters
+  ----------
+  image : ndarray
+      Input image.
+  angle : float
+      Rotation angle in degrees in counter-clockwise direction.
+  resize : bool, optional
+      Determine whether the shape of the output image will be automatically
+      calculated, so the complete rotated image exactly fits. Default is
+      False.
+  center : iterable of length 2
+      The rotation center. If ``center=None``, the image is rotated around
+      its center, i.e. ``center=(cols / 2 - 0.5, rows / 2 - 0.5)``.  Please
+      note that this parameter is (cols, rows), contrary to normal skimage
+      ordering.
+  ```
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray
+      Input image.
+  angle : float
+      Rotation angle in degrees in counter-clockwise direction.
+  resize : bool, optional
+      Determine whether the shape of the output image will be automatically
+      calculated, so the complete rotated image exactly fits. Default is
+      False.
+  center : iterable of length 2
+      The rotation center. If ``center=None``, the image is rotated around
+      its center, i.e. ``center=(cols / 2 - 0.5, rows / 2 - 0.5)``.  Please
+      note that this parameter is (cols, rows), contrary to normal skimage
+      ordering.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray
+      Input image.
+  angle : float
+      Rotation angle in degrees in counter-clockwise direction.
+  resize : bool, optional
+      Determine whether the shape of the output image will be automatically
+      calculated, so the complete rotated image exactly fits. Default is
+      False.
+  center : iterable of length 2
+      The rotation center. If ``center=None``, the image is rotated around its
+      center, i.e. ``center=(rows / 2 - 0.5, cols / 2 - 0.5)``.  Please note
+      that this parameter is (rows, cols) — the standard skimage ordering.
+  ```
+
+  (with associated logic change in implementation).
+
+  Add Skimage1 porting docstring:
+
+  ```rest
+  There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
+
+  The first is that Skimage2 returns image coordinates in reversed order to that in Skimage1.  `Skimage2` returns the `intensity`, followed by the *column* coordinates in the array (`x_coords`) followed by the *row* cooordinates (`y_coords`).   In contrast, Skimage2 returns the intensity, followed by the *row* (first / 'i' axis) coordinates, followed by the *column* coordinates (second / 'j' axis).  This is for consistency with other Skimage2 routines.
+
+  The second is that Skimage2 specifes minimum distances with `min_distance`
+  keyword argument, instead of `min_distanc_x` and `min_distance_y` arguments.
+  `min_distance` can be scalar (in which case the argument applies to both
+  axes of the image), or it should be a sequence of length 2. If
+  `min_distance` is a sequence, specify shift in `i, j` order.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> intensity, col_coords, row_coords = ski1.feature._prominent_peaks(
+  ...     img, min_distance_x=1, min_distance_y=2)
+  >>> # Skimage2.  Note reversal of second and third return arguments,
+  >>> # and min_distance specified in row, column (i, j) order.
+  >>> intensity, row_coords, col_coords = ski2.feature._prominent_peaks(
+  ...     img, min_distance=(2, 1)
+
+  ```
+
+## Radians and degrees
+
+Generally we give angles in radians.  There are size and a half exceptions:
+
+* `transform/_warp.py::rotate` gives rotation angle in degrees.
+* `transform/radon_transform.py::radon` gives projection angles `theta` in
+  degrees.
+* `transform/radon_transform.py::iradon`, and `iradon_sart` gives
+  reconstruction angles `theta` in degrees.
+* `transform/radon_transform.py::order_angles_golden_ratio` gives
+  projection angles `theta` in degrees.
+* `transform/_geometric.py::euler_rotation_matrix` has a `degrees=False`
+  keyword argument, allowing the user to use degrees instead of default
+  radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.
+
+Proposal: standardize to radians throughout.
+
+## Hough transform
+
+At the moment:
+
+* Hough transforms return lines in 
+
+## Color and `channel_axis`
+
+While exploring coordinates, I found several instances where the color channel is assumed to be the last.  Currently discussing whether these should now have `channel_axis=` in the Skimage2 argument list:
+
+* `manual_segmentation` and `manual_lasso_segmentation` in
+  `src/skimage/future/manual_segmentation.py` (`image : (M, N[, 3]) array`)
+  Question on Zulip; should `future` modules be ported?
+* `set_color` in `src/skimage/draw/draw.py` (`image : ndarray of shape (M, N,
+  C)`)
+* `rag_mean_color` and `show_rag` in `src/skimage/graph/_rag.py`.
 
 
 ## Documentation
