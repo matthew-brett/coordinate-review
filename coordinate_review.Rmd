@@ -1175,7 +1175,18 @@ In those cases, we should have the following policy:
   image row coordinates.  However, there is no reason in the code that the
   first column could not be image row coordinates, and the second be image
   column coordinates.  So `predict_x` in fact means, predict coordinate in
-  first coordinate column, and so on.  We can therefore rephrase these as `predict_i`, `predict_j`, and `predict_ij`.
+  first coordinate column, and so on.
+
+  We have various options.
+
+  One is to deprecate `predict_x`, `predict_`, in favor of using `predict`.
+  `predict_x` delegates to `predict(y, axis=1)[:, 0]`, `predict_y` delegates
+  to `predict(x, axis=0)[:, 0]`. We have `predict_xy` for `CircleModel` and `EllipseModel`.  We could rename those to `predict_coords`.
+
+  We could simply rename to reflect the fact that `x` and `y` correspond to the first and second coordinates columns, as in `predict_c0`, `predict_c1`, `predict_c01`.
+
+  Or we could commit to the interpretation of the coordinates, and rename to
+  `predict_i`, `predict_j`, and `predict_ij`.
 
 * `skimage.feature.corner.structure_tensor` and `hessian_matrix` have an
   `order='rc' | 'xy'` input parameter that default to "rc" (meaning "ij").  Here's the parameter description from the docstring:
@@ -1442,7 +1453,18 @@ Proposal: standardize to radians throughout.
 
 ## Hough transform
 
-At the moment:
+Note the following:
+
+* `src/skimage/transform/hough_transform.py:    hspace : ndarray, shape (M, N)`
+* `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
+* `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
+* `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
+* `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
+* `src/skimage/transform/hough_transform.py:    hspaces : (M, N, P) array`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
+* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
 
 * Hough transforms return lines in 
 
