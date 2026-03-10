@@ -1326,7 +1326,7 @@ In those cases, we should have the following policy:
   image : ndarray
       Input image.
   angle : float
-      Rotation angle in degrees in counter-clockwise direction.
+      Rotation angle in radians in counter-clockwise direction.
   resize : bool, optional
       Determine whether the shape of the output image will be automatically
       calculated, so the complete rotated image exactly fits. Default is
@@ -1344,34 +1344,31 @@ In those cases, we should have the following policy:
   ```rest
   There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
 
-  The first is that Skimage2 returns image coordinates in reversed order to that in Skimage1.  `Skimage2` returns the `intensity`, followed by the *column* coordinates in the array (`x_coords`) followed by the *row* cooordinates (`y_coords`).   In contrast, Skimage2 returns the intensity, followed by the *row* (first / 'i' axis) coordinates, followed by the *column* coordinates (second / 'j' axis).  This is for consistency with other Skimage2 routines.
+  The first is that Skimage2 expects *radians* for the `angle` argume to rotate.  Skimage2 expected *degrees*.
 
-  The second is that Skimage2 specifes minimum distances with `min_distance`
-  keyword argument, instead of `min_distanc_x` and `min_distance_y` arguments.
-  `min_distance` can be scalar (in which case the argument applies to both
-  axes of the image), or it should be a sequence of length 2. If
-  `min_distance` is a sequence, specify shift in `i, j` order.
+  The second is that Skimage2 specifes the center for rotation as a coordinate in i, j (row, column) order, whereas Skimage1 asked for the center in (col, row) order.
 
   When porting Skimage1 code to Skimage 2, the following are equivalent:
 
+  >>> import numpy as np
   >>> import skimage as ski1
   >>> import skimage2 as ski2
   >>>
   >>> # Skimage1
-  >>> intensity, col_coords, row_coords = ski1.feature._prominent_peaks(
-  ...     img, min_distance_x=1, min_distance_y=2)
-  >>> # Skimage2.  Note reversal of second and third return arguments,
-  >>> # and min_distance specified in row, column (i, j) order.
-  >>> intensity, row_coords, col_coords = ski2.feature._prominent_peaks(
-  ...     img, min_distance=(2, 1)
-
+  >>> r_img_1 = ski1.transform.rotate(img, np.pi / 8, (10, 5))
+  >>> # Skimage2.  Note angle in degrees, and reversal of center coordinate
+  >>> # ordering (col, row)
+  >>> r_img_2 = ski2.transform.rotate(img, 22.5, (5, 10))
+  >>> # The Skimage 1 and 2 code are equivalent.
+  >>> assert np.all(r_img_1 == r_img_2)
   ```
 
 ## Radians and degrees
 
 Generally we give angles in radians.  There are size and a half exceptions:
 
-* `transform/_warp.py::rotate` gives rotation angle in degrees.
+* `transform/_warp.py::rotate` gives rotation angle in degrees.  Plan — see
+  above.
 * `transform/radon_transform.py::radon` gives projection angles `theta` in
   degrees.
 * `transform/radon_transform.py::iradon`, and `iradon_sart` gives
