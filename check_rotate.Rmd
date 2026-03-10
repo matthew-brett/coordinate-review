@@ -15,16 +15,30 @@ jupyter:
 The `rotate` docstring asserts that rotation is counter-clockwise.  Let's check.
 
 ```{python}
+import numpy as np
 import matplotlib.pyplot as plt
 import skimage as ski
+
+plt.rcParams['image.cmap'] = 'gray'
 ```
 
 ```{python}
 img = ski.data.camera()
-plt.imshow(img, cmap='gray')
+plt.imshow(img)
 ```
 
 ```{python}
 r_img = ski.transform.rotate(img, 20)
-plt.imshow(r_img, cmap='gray')
+plt.imshow(r_img)
+```
+
+Yes, the rotation is anti-clockwise.
+
+
+Notice `rotate` asks for an angle in *degrees*.  For `swirl` however, although the rotation is also anti-clockwise, the rotation angle is in *radians*.
+
+```{python}
+rot_rad = 20 / 180 * np.pi
+s_img = ski.transform.swirl(img, strength=0, rotation=rot_rad)
+plt.imshow(s_img)
 ```

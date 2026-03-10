@@ -1278,6 +1278,63 @@ In those cases, we should have the following policy:
 
 * `skimage/transform/_warps.py`: `swirl`
 
+  ```rest
+  Parameters
+  ----------
+  image : ndarray
+      Input image.
+  center : (column, row) tuple or (2,) ndarray, optional
+      Center coordinate of transformation.
+  strength : float, optional
+      The amount of swirling applied.
+  radius : float, optional
+      The extent of the swirl in pixels.  The effect dies out
+      rapidly beyond `radius`.
+  rotation : float, optional
+      Additional rotation applied to the image.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray
+      Input image.
+  center : (row, column) tuple or (2,) ndarray, optional
+      Center coordinate of transformation.
+  strength : float, optional
+      The amount of swirling applied.
+  radius : float, optional
+      The extent of the swirl in pixels.  The effect dies out
+      rapidly beyond `radius`.
+  rotation : float, optional
+      Additional anti-clockwise rotation applied to the image, in radians.
+  ```
+
+  with associated implementation.  Skimage porting docstring:
+
+  ```rest
+  There are is one key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
+
+  The difference is that Skimage2 specifes the center for rotation as
+  a coordinate in i, j (row, column) order, whereas Skimage1 asked for the
+  center in (column, row) order.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import numpy as np
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> s_img_1 = ski1.transform.swirl(img, (10, 5))
+  >>> # Skimage2.  Note reversal of center coordinate ordering (col, row)
+  >>> s_img_2 = ski2.transform.swirl(img, (5, 10))
+  >>> # The Skimage 1 and 2 code are equivalent.
+  >>> assert np.all(s_img_1 == s_img_2)
+  ```
+
 * `skimage/transform/_warps.py`: `rotate`
 
   ```rest
@@ -1346,7 +1403,9 @@ In those cases, we should have the following policy:
 
   The first is that Skimage2 expects *radians* for the `angle` argume to rotate.  Skimage2 expected *degrees*.
 
-  The second is that Skimage2 specifes the center for rotation as a coordinate in i, j (row, column) order, whereas Skimage1 asked for the center in (col, row) order.
+  The second is that Skimage2 specifes the center for rotation as a coordinate
+  in i, j (row, column) order, whereas Skimage1 asked for the center in
+  (column, row) order.
 
   When porting Skimage1 code to Skimage 2, the following are equivalent:
 
