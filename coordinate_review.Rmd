@@ -1217,6 +1217,170 @@ The key and difficult change is that the *Hough space* will change
 from angles from the j (x) axis, clockwise, to angles from the
 i (y) axis, counterclockwise.
 
+See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
+
+* `hough_line`.   Notes should change from:
+
+  ```rest
+  Notes
+  -----
+  The origin is the top left corner of the original image.
+  X and Y axis are horizontal and vertical edges respectively.
+  The distance is the minimal algebraic distance from the origin
+  to the detected line.
+  The angle accuracy can be improved by decreasing the step size in
+  the `theta` array.
+  ```
+
+  to:
+
+  ```rest
+  Notes
+  -----
+  The origin is the top left corner of the original image. i and j axes
+  are vertical and horizontal edges respectively (first and second axes
+  of the input `image` array).  Angles are anti-clockwise from the
+  i axis (towards the j axis).
+
+  The distance is the minimal algebraic distance from the origin to the
+  detected line.  Distance is negative if the distance should be
+  interpreted as having a negative i (first axis) direction.
+
+  The angle accuracy can be improved by decreasing the step size in the
+  `theta` array.
+  ```
+
+  Porting notes:
+
+  ```rest
+  The difference between this routine (in Skimage1) and the equivalent
+  routine in Skimage2, is that the returned `hspace`, `angles` and
+  `distances` values define lines relative to the i-axis (the first axis
+  of the `image` array). Positive angles denote anti-clockwise rotation
+  from that axis. In Skimage1, `angles` and `distances` are relative to
+  the j-axis (the second axis of the `image` array), and positive angles
+  denote clockwise rotation from that axis.
+
+  To help porting, we have a utility routine, `hough_ij2ji`, that takes
+  the `hspace`, `angles` and `distances` output from the Skimage2 *i, j*
+  convention, and returns `hspace`, `angles` and `distance` for the
+  Skimage1 *j, i* (column, row, *x, y*) convention.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> hs1, angles1, dist1 = ski1.transform.hough_transform(img)
+  >>> # Skimage2 equivalent to Skimage1 code.
+  >>> hs2, angles2, dist2 = ski2.transform.hough_transform(img)
+  >>> hs1_equiv, angles1_equiv, dist1_eqiv = ski2.transform.hough_ij2ji(
+  ...     (hs2, angles2, dist2)
+
+  ```
+
+* `probabilistic_hough_line`: 
+
+  ```rest
+  Returns
+  -------
+  lines : list
+    List of lines identified, lines in format ((x0, y0), (x1, y1)),
+    indicating line start and end.
+
+  ```
+
+  Should be:
+
+  ```rest
+  Returns
+  -------
+  lines : list
+    List of lines identified, lines in format ((i0, j0), (i1, j1)),
+    indicating line start and end in terms of first and second axis of the `image` array.
+  ```
+
+  Porting notes:
+
+  ```rest
+  The difference between this routine (in Skimage1) and the equivalent
+  routine in Skimage2, is that the returned `lines` are coordinates in
+  Numpy convention, with the index on the first `image` axis first, and
+  that on the second, second (see the docstring).  Put another way, the
+  Skimage2 returned coordinates are in *i, j* order, whereas those in
+  Skimage1 are in *j, i* (AKA column, row, or *x, y*) order.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> lines1 = ski1.transform.probabilisitic_hough_transform(
+  ...     img)
+  >>> # Skimage2 equivalent to Skimage1 code.
+  >>> lines2 = ski2.transform.probabilisitic_hough_transform(
+  ...     img)
+  >>> # Reverse coordinate order.
+  >>> lines1_equiv = [((j0, i0), (j1, i1)) for ((i0, j0), (i1, j1)) in lines2]
+  ```
+
+* `hough_circle_peaks`.  This needs further analysis.  Accepts `hspace` array
+  in form above, and returns coordinates, noted to be in x, y order.  However, how does the output change as a result of the modified `hspace` array?
+
+* `hough_ellipse`: meaning of returned `orientation` in Skimage1 is clockwise
+  rotation from the *j* (second) axis (see `draw.py:ellipse_perimeter`.  In
+  Skimage2 it will be anti-clockwise rotation from the *i* (first) axis.
+
+  ```rest
+  Returns
+  -------
+  result : ndarray with fields [(accumulator, yc, xc, a, b, orientation)].
+      Where ``(yc, xc)`` is the center, ``(a, b)`` the major and minor
+      axes, respectively. The `orientation` value follows the
+      `skimage.draw.ellipse_perimeter` convention.
+  ```
+
+  should be:
+
+  ```rest
+  Returns
+  -------
+  result : ndarray with fields [(accumulator, rc, cc, a, b, orientation)].
+      Where ``(rc, cc)`` is the center, ``(a, b)`` the major and minor
+      axes, respectively. The `orientation` value follows the
+      `skimage.draw.ellipse_perimeter` convention, where positive values correspond to anti-clockwise rotation from the *i* axis (first image axis).
+  ```
+
+  with associated implementation.
+
+  Porting notes:
+
+  ```rest
+  There one difference in the returned output between this routine (in
+  Skimage1) and the equivalent routine in Skimage2 — and that is the
+  interpretation of the output `orientation` parameter.
+
+  In Skimage2, `orientation` is the angle of the main axis of the ellipse,
+  where the angle is anti-clockwise from the first (*i*) axis of an image
+  array.
+
+  In Skimage1, `orientation` was the angle, from the second (*j*) axis of the
+  image array, clockwise.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> accum,  = hough_ellipse(img, threshold=8)
+  >>> # Skimage2 equivalent to Skimage1 code.
+  >>> angle2 = np.pi / 2 - angle1  # Skimage2 equivalent angle.
+  >>> rr2, cc2 = ski2.draw.ellipse_permeter(10, 10, 6, 8, orientation=angle2)
+  ```
+
 **Docstrings**
 
 Note multiple instances in both files of of `(M, N)`, replace with `(I, J)`.
@@ -1241,6 +1405,62 @@ radii : (RI,) array
     Radii corresponding to Hough spaces.
 ```
 
+#### Draw module
+
+* `draw/draw.py::ellipse_perimeter`: 
+
+  ```rest
+  Parameters
+  ----------
+  r, c : int
+      Centre coordinate of ellipse.
+  r_radius, c_radius : int
+      Minor and major semi-axes. ``(r/r_radius)**2 + (c/c_radius)**2 = 1``.
+  orientation : double, optional
+      Major axis orientation in clockwise direction as radians.
+  ```
+
+  `orientation` here is a clockwise angle from the *j* (second) axis.
+
+  Should be (will be):
+
+  ```rest
+  Parameters
+  ----------
+  r, c : int
+      Centre coordinate of ellipse.
+  r_radius, c_radius : int
+      Minor and major semi-axes. ``(r/r_radius)**2 + (c/c_radius)**2 = 1``.
+  orientation : double, optional
+      Major axis orientation in anti-clockwise direction from first array
+      axis` (*i* axis), as radians.
+  ```
+
+  Porting notes:
+
+  ```rest
+  The difference between this routine (in Skimage1) and the equivalent
+  routine in Skimage2, is that the meaning (and therefore, value) for the input `orientation` parameter.
+
+  In Skimage2, `orientation` is the angle of the main axis of the ellipse,
+  where the angle is anti-clockwise from the first (*i*) axis of an image
+  array.
+
+  In Skimage1, `orientation` was the angle, from the second (*j*) axis of the
+  image array, clockwise.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> angle1 = np.pi / 8  # 22.5 degrees rotation.
+  >>> rr1, cc1 = ski1.draw.ellipse_permeter(10, 10, 6, 8, orientation=angle1)
+  >>> # Skimage2 equivalent to Skimage1 code.
+  >>> angle2 = np.pi / 2 - angle1  # Skimage2 equivalent angle.
+  >>> rr2, cc2 = ski2.draw.ellipse_permeter(10, 10, 6, 8, orientation=angle2)
+  ```
 
 #### Other x, y examples
 
