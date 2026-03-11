@@ -1326,8 +1326,65 @@ See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
   >>> lines1_equiv = [((j0, i0), (j1, i1)) for ((i0, j0), (i1, j1)) in lines2]
   ```
 
-* `hough_circle_peaks`.  This needs further analysis.  Accepts `hspace` array
-  in form above, and returns coordinates, noted to be in x, y order.  However, how does the output change as a result of the modified `hspace` array?
+* `hough_circle_peaks`.  This accepts the outputs of `hough_circle`, and
+  returns coordinates, noted to be in x, y (i.e. (j, i) or (col, row))
+  order.
+
+  ```rest
+  Parameters
+  ----------
+  hspaces : (M, N, P) array
+      Hough spaces returned by the `hough_circle` function.
+  radii : (M,) array
+      Radii corresponding to Hough spaces.
+  min_xdistance : int, optional
+      Minimum distance separating centers in the x dimension.
+  min_ydistance : int, optional
+      Minimum distance separating centers in the y dimension.
+  threshold : float, optional
+      Minimum intensity of peaks in each Hough space.
+      Default is `0.5 * max(hspace)`.
+  ...
+  Returns
+  -------
+  accum, cx, cy, rad : tuple of array
+      Peak values in Hough space, x and y center coordinates and radii.
+  ```
+
+  Should be:
+
+  ```rest
+  Parameters
+  ----------
+  hspaces : (RI, I2R, J2R) array
+      Hough spaces returned by the `hough_circle` function.
+  radii : (RI,) array
+      Radii corresponding to Hough spaces.
+  \*
+  min_distance : int or length 2 sequence, optional
+      Minimum distance separating centers in the i, j dimensions.
+  threshold : float, optional
+      Minimum intensity of peaks in each Hough space.
+      Default is `0.5 * max(hspace)`.
+  ...
+  Returns
+  -------
+  accum, ci, cj, rad : tuple of array
+      Peak values in Hough space, i and j center coordinates and radii.
+  ```
+
+  Porting notes:
+
+  ```rest
+  TBA
+
+  Changes:
+
+  * Keyword only after 2
+  * `min_distance` instead of `min_xdistance`, `min_ydistance`, and
+    `min_distance` in i, j order.
+  * Coordinates returned in i, j order not j, i order.
+  ```
 
 * `hough_ellipse`: meaning of returned `orientation` in Skimage1 is clockwise
   rotation from the *j* (second) axis (see `draw.py:ellipse_perimeter`.  In
@@ -1387,23 +1444,6 @@ Note multiple instances in both files of of `(M, N)`, replace with `(I, J)`.
 
 Output specification for `H` in `hough_circle`: edit for M, N etc.
 
-In `hough_line_peaks`:
-
-```rest
-hspaces : (M, N, P) array
-    Hough spaces returned by the `hough_circle` function.
-radii : (M,) array
-    Radii corresponding to Hough spaces.
-```
-
-Plan:
-
-```rest
-hspaces : (RI, I2R, J2R) array
-    Hough spaces returned by the `hough_circle` function.
-radii : (RI,) array
-    Radii corresponding to Hough spaces.
-```
 
 #### Draw module
 
