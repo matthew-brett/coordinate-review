@@ -1168,30 +1168,48 @@ In those cases, we should have the following policy:
 
 ### Examples of "x", "y"
 
-* `predict_x`, `predict_y`, `predict_xy` in transform classes.  The transform
-  classes use "x" to mean the first column in an n by 2 coordinate array, and
-  "y" to mean the second.  And by convention, they are written as if they
-  expect the "x" coordinate to be image column coordinates, and "y" to be
-  image row coordinates.  However, there is no reason in the code that the
-  first column could not be image row coordinates, and the second be image
-  column coordinates.  So `predict_x` in fact means, predict coordinate in
-  first coordinate column, and so on.
+#### `predict_x`, `predict_y`, `predict_xy` in transform classes
 
-  We have various options.
+The transform classes use "x" to mean the first column in an n by 2 coordinate
+array, and "y" to mean the second.  And by convention, they are written as if
+they expect the "x" coordinate to be image column coordinates, and "y" to be
+image row coordinates.  However, there is no reason in the code that the first
+column could not be image row coordinates, and the second be image column
+coordinates.  So `predict_x` in fact means, predict coordinate in first
+coordinate column, and so on.
 
-  One is to deprecate `predict_x`, `predict_`, in favor of using `predict`.
-  `predict_x` delegates to `predict(y, axis=1)[:, 0]`, `predict_y` delegates
-  to `predict(x, axis=0)[:, 1]`. We have `predict_xy` for `CircleModel` and `EllipseModel`.  We could rename those to `predict_coords`.
+We have various options, discussed on 10 March meeting.
 
-  We could simply rename to reflect the fact that `x` and `y` correspond to
-  the first and second coordinates columns, as in `predict_c0`, `predict_c1`,
-  `predict_c01`, or `predict_0`, `predict_1`, `predict_01`.
+*Preferred option* is to deprecate `predict_x`, `predict_`, in favor of using
+`predict`. `predict_x` delegates to `predict(y, axis=1)[:, 0]`, `predict_y`
+delegates to `predict(x, axis=0)[:, 1]`. We have `predict_xy` for `CircleModel`
+and `EllipseModel`.  We will rename those to `predict_coords`. Rename
+`predict(..., axis=` argument to `from_axis`.  There was some discussion of
+whether to return 2D coordinates from e.g `predict(y, from_axis=1)` — therefore
+returning (in this case) the input `y` as the second column of the output — as
+is currently true, or to return only the generated column.  Note that `predict`
+for `LineModelND` returns an N by D array, where D is the dimensionality of the
+line.   Discussion centered on what use the user was likely to make of the
+output — are they going to use it as coordinates (2D array for e.g. 2D line) or
+as a column of coordinates (1D array for e.g. 2D line).  I (MB) argued that
+changing the current API to return only the generated coordinate column(s)
+would start to become confusing / inconvenient for the `LineModelND` case,
+because the user will have to do some error-prone gymnastics to put the input
+vector back into the output array.  Therefore I lean towards leaving the API
+is-is.
 
-  Or we could commit to the interpretation of the coordinates, and rename to
-  `predict_i`, `predict_j`, and `predict_ij`.
+Other options considered:
 
-  Github searches: `/\.predict_x\(/ AND skimage AND NOT path:skimage` suggests
-  there isn't much code out there using these functions.
+*  We could simply rename to reflect the fact that `x` and `y` correspond to
+   the first and second coordinates columns, as in `predict_c0`, `predict_c1`,
+   `predict_c01`, or `predict_0`, `predict_1`, `predict_01`.
+*  Or we could commit to the interpretation of the coordinates, and rename to
+   `predict_i`, `predict_j`, and `predict_ij`.
+
+Github searches: `/\.predict_x\(/ AND skimage AND NOT path:skimage` suggests
+there isn't much code out there using these functions.
+
+#### Other x, y examples
 
 * `skimage.feature.corner.structure_tensor` and `hessian_matrix` have an
   `order='rc' | 'xy'` input parameter that default to "rc" (meaning "ij").  Here's the parameter description from the docstring:
