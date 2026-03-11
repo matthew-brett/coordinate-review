@@ -14,16 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `src/skimage/transform/hough_transform.py:    hspace : ndarray, shape (M, N)`
-* `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
-* `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
-* `src/skimage/transform/hough_transform.py:    image : ndarray of shape (M, N)`
-* `src/skimage/transform/hough_transform.py:    image : ndarray, shape (M, N)`
-* `src/skimage/transform/hough_transform.py:    hspaces : (M, N, P) array`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
-* `src/skimage/transform/_hough_transform.pyx:    img : (M, N) ndarray`
 * `src/skimage/transform/_warps.py:    image : (M, N[, ...][, C]) ndarray`
 * `src/skimage/transform/_warps.py:    a : (M, N) or (M, N, P) ndarray`
 * `src/skimage/transform/_warps.py:    b : (M, N)`

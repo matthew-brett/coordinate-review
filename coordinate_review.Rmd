@@ -1156,9 +1156,9 @@ Most of the time, "x" means "column" or "j", and "y" means "row" or "i".
 In those cases, we should have the following policy:
 
 * Deprecate use of "x" and "y" (when they have meaning "column" and "row"),
-  and prefer "i" and "j" (or maybe "column" and "row").  We should also either
-  make these keyword-only, or change the default parameter order to prefer
-  "i", "j" order rather than "column", "row" order.
+  and prefer "j" and "i" (or maybe "column" and "row").  We should also either
+  make these keyword-only, or change the default parameter order to prefer "i",
+  "j" order rather than "column", "row" order.
 * We may want to either:
 
   a) add an extra keyword argument similar to `coord_convention='xy' | 'ij'` or
@@ -1208,6 +1208,39 @@ Other options considered:
 
 Github searches: `/\.predict_x\(/ AND skimage AND NOT path:skimage` suggests
 there isn't much code out there using these functions.
+
+#### Hough transforms
+
+The public API comes from `transform/hough_transform.py`.  Cython implementation in `transform/_hough_transform.pyx`.
+
+The key and difficult change is that the *Hough space* will change
+from angles from the j (x) axis, clockwise, to angles from the
+i (y) axis, counterclockwise.
+
+**Docstrings**
+
+Note multiple instances in both files of of `(M, N)`, replace with `(I, J)`.
+
+Output specification for `H` in `hough_circle`: edit for M, N etc.
+
+In `hough_line_peaks`:
+
+```rest
+hspaces : (M, N, P) array
+    Hough spaces returned by the `hough_circle` function.
+radii : (M,) array
+    Radii corresponding to Hough spaces.
+```
+
+Plan:
+
+```rest
+hspaces : (RI, I2R, J2R) array
+    Hough spaces returned by the `hough_circle` function.
+radii : (RI,) array
+    Radii corresponding to Hough spaces.
+```
+
 
 #### Other x, y examples
 
@@ -1473,35 +1506,6 @@ Generally we give angles in radians.  There are size and a half exceptions:
   radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.
 
 Proposal: standardize to radians throughout.
-
-## Hough transform
-
-* `src/skimage/transform/hough_transform.py:    hspaces : (M, N, P) array`
-
-The following are in `transform/hough_transform.py`.
-
-* Note multiple instances of `(M, N)`, replace with `(I, J)`.  Note output
-  specification for `H` in `hough_circle`: edit for M, N etc.
-
-* `hough_line_peaks`:
-
-  ```rest
-  hspaces : (M, N, P) array
-      Hough spaces returned by the `hough_circle` function.
-  radii : (M,) array
-      Radii corresponding to Hough spaces.
-  ```
-
-  Maybe better as:
-
-  ```rest
-  hspaces : (RI, I2R, J2R) array
-      Hough spaces returned by the `hough_circle` function.
-  radii : (RI,) array
-      Radii corresponding to Hough spaces.
-  ```
-
-
 
 ## Color and `channel_axis`
 
