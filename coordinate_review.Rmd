@@ -1130,10 +1130,9 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ...], K)`, `(M, N)` with `(I, J)`.
 * `src/skimage/filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
   `(I, J, K)` and `(I, J)` throughout.
-* `src/skimage/transform/hough_transform.py`: — replace `(M, N)` with and `(I,
-  J)` throughout.  There is much else to do for coordinates in the
-  `hough_transform` module — we need to rephrase outputs in terms of ij,
-  instead of xy, including angles.  See below.
+* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
+  throughout.
+* `feature/corner.py`: — replace `(M, N)` with and `(I, J)` throughout.
 
 * See the "Not checked" section in `mn.md` for instances as above I have not
   checked yet.

@@ -29,8 +29,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 * `src/skimage/filters/ridges.py:    out : (M, N[, P]) ndarray`
 * `src/skimage/filters/ridges.py:    image : (M, N[, P]) ndarray`
 * `src/skimage/filters/ridges.py:    out : (M, N[, P]) ndarray`
-* `src/skimage/segmentation/slic_superpixels.py:    image : (M, N[, P][, C]) ndarray`
-* `src/skimage/segmentation/slic_superpixels.py:    * Images of shape (M, N, 3) are interpreted as 2D RGB images by default. To`
 * `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
 * `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
 * `src/skimage/transform/_radon_transform.pyx:    image_update : ndarray of float, shape (M, N)`
@@ -71,17 +69,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 * `src/skimage/feature/template.py:        is an array with shape `(M - m + 1, N - n + 1)` for an `(M, N)` image`
 * `src/skimage/feature/texture.py:    image : (M, N) array`
 * `src/skimage/feature/texture.py:    output : (M, N) array`
-* `src/skimage/feature/corner.py:        An array of shape ``(M, N[, ...], image.ndim, image.ndim)``,`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : ndarray of shape (M, N)`
-* `src/skimage/feature/corner.py:    image : (M, N) array`
 * `src/skimage/feature/peak.py:    image : (M, N) ndarray`
 * `src/skimage/feature/_hog.py:    channel : ndarray of shape (M, N)`
 * `src/skimage/feature/_hog.py:    image : (M, N[, C]) ndarray`
@@ -115,18 +102,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 * `src/skimage/measure/_find_contours.py:    mask : ndarray of shape (M, N) and dtype bool`
 * `src/skimage/measure/pnpoly.py:    shape : tuple (M, N)`
 * `src/skimage/measure/pnpoly.py:    mask : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    image0 : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    image1 : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    mask : (M, N) ndarray of dtype bool, optional`
-* `src/skimage/measure/_colocalization.py:    image0 : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    image1_mask : (M, N) ndarray of dtype bool`
-* `src/skimage/measure/_colocalization.py:    mask : (M, N) ndarray of dtype bool, optional`
-* `src/skimage/measure/_colocalization.py:    image0 : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    image1 : ndarray of shape (M, N)`
-* `src/skimage/measure/_colocalization.py:    mask : ndarray of shape (M, N) and dtype bool, optional`
-* `src/skimage/measure/_colocalization.py:    image0_mask : (M, N) ndarray of dtype bool`
-* `src/skimage/measure/_colocalization.py:    image1_mask : (M, N) ndarray of dtype bool`
-* `src/skimage/measure/_colocalization.py:    mask : (M, N) ndarray of dtype bool, optional`
 * `src/skimage/measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
 * `src/skimage/measure/_regionprops.py:    intensity_image : (M, N[, P][, C]) ndarray, optional`
 * `src/skimage/measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
