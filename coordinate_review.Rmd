@@ -1750,7 +1750,7 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
 
 ## Radians and degrees
 
-Generally we give angles in radians.  There are size and a half exceptions:
+Generally we give angles in radians.  There are six and a half exceptions:
 
 * `transform/_warp.py::rotate` gives rotation angle in degrees.  Plan — see
   above.
@@ -1760,11 +1760,11 @@ Generally we give angles in radians.  There are size and a half exceptions:
   reconstruction angles `theta` in degrees.
 * `transform/radon_transform.py::order_angles_golden_ratio` gives
   projection angles `theta` in degrees.
-* `transform/_geometric.py::euler_rotation_matrix` has a `degrees=False`
+* `transform/_geometric.py::_euler_rotation_matrix` has a `degrees=False`
   keyword argument, allowing the user to use degrees instead of default
-  radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.
+  radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.  Of course this is a private function, and it's a simple call-through to `scipy.spatial.transform.Rotation.from_euler`.
 
-Proposal: standardize to radians throughout.
+Proposal: standardize to radians throughout.  Remove `degrees=False` argument to `_euler_rotation_matrix` helper function.
 
 ## Color and `channel_axis`
 
