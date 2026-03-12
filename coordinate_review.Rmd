@@ -1641,11 +1641,9 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   with associated implementation.  Skimage porting docstring:
 
   ```rest
-  There are is one key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
-
-  The difference is that Skimage2 specifes the center for rotation as
-  a coordinate in i, j (row, column) order, whereas Skimage1 asked for the
-  center in (column, row) order.
+  This routine behaves differently in Skimage1 and Skimage2. Skimage2 specifes
+  the center for rotation as a coordinate in i, j (row, column) order, whereas
+  Skimage1 asked for the center in (column, row) order.
 
   When porting Skimage1 code to Skimage 2, the following are equivalent:
 
