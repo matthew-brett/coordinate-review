@@ -327,6 +327,28 @@ rephrased in terms of "i, j, k ...".
 Cursor (the AI agent) identified multiple instances of row and column
 references in docstrings and variables.
 
+## Color and `channel_axis`
+
+While exploring coordinates, I found several instances where the color channel
+is assumed to be the last.  We agreed on Zulip and meeting that we should always offer `channel_axis=` in the Skimage2 argument list for functions expecting a color channel axis, and should not assume it is the last.  This applies to:
+
+* `set_color` in `draw/draw.py` (`image : ndarray of shape (M, N,
+  C)`)
+* `rag_mean_color` and `show_rag` in `graph/_rag.py`.
+* `quickshift` in `segmentation/_quickshift.py`
+
+We need some agreed phrasing for the names / lengths of the channel axis — for
+example for `(M, N, C)` above.  One suggestion in the meeting and on Zulip
+was:
+
+```rest
+  image : 3D array, represending 2D image, with channel axis, e.g (I, J, C)
+      Use the `channel_axis` parameter to specify the array axis corresponding to color channels.
+```
+
+See comments / plans for given functions in text below.
+
+
 ## Skimage and planes
 
 Like "row" and "column", "plane" is a semantic label.  I am going to argue
@@ -373,7 +395,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
 ### Plans and investigation by found 3D-capable routines
 
-* `src/skimage/measure/_ccomp.pyx:    # Handle first plane`.  This is in
+* `measure/_ccomp.pyx:    # Handle first plane`.  This is in
   `scan3D`, called from `label_cython` in the same file.  Here the input array
   `input_` is first axis-reordered to order axes in ascending size, before
   calling `scan3D`, and the array is then axis-reordered to match input.
@@ -382,7 +404,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   the same result.  Tested, provisionally confirmed in `label_3d_axes.ipynb`
   — labels show 1 to 1 mapping when running label on rolled versions of binary
   image.
-* `src/skimage/draw/draw.py`: `rectangle`.  `start` input argument is:
+* `draw/draw.py`: `rectangle`.  `start` input argument is:
 
   ```rest
     start : tuple
@@ -421,6 +443,54 @@ If that is not true, then the function may not be transpose invariant, and I'll 
         going along the opposite direction. If extent is negative, the
         `start` point is not included.
   ```
+
+* `draw/draw.py`: `set_color`:
+
+  ```rest
+  """Set pixel color in the image at the given coordinates.
+
+  Note that this function modifies the color of the image in-place.
+  Coordinates that exceed the shape of the image will be ignored.
+
+  Parameters
+  ----------
+  image : ndarray of shape (M, N, C)
+      Image
+  coords : tuple of (ndarray of shape (K,), ...)
+      Row and column coordinates of pixels to be colored.
+  color : ndarray of shape (C,)
+      Color to be assigned to coordinates in the image.
+  alpha : np.number or ndarray of dtype np.number and shape (K,)
+      Alpha values used to blend color with image.  0 is transparent,
+      1 is opaque.
+  ```
+
+  Plan:
+
+  ```rest
+  """Set pixel color in the image at the given coordinates.
+
+  Note that this function modifies the color of the image in-place.
+  Coordinates that exceed the shape of the image will be ignored.
+
+  Parameters
+  ----------
+  image : 3D array, with channel axis, e.g. shape (I, J, C)
+      2D image with channel axis specifying color.  Specify color channel axis
+      with `channel_axis` (default is last axis).
+  coords : tuple of (ndarray of shape (N,), ...)
+      Row and column coordinates of pixels to be colored.
+  color : ndarray of shape (C,)
+      Color to be assigned to coordinates in the image.
+  alpha : np.number or ndarray of dtype np.number and shape (N,)
+      Alpha values used to blend color with image.  0 is transparent,
+      1 is opaque.
+  channel_axis : int or None, optional
+      This parameter indicates which axis of the array corresponds to
+      channels.
+  ```
+
+  Add `last_channel_axis` decorator and test.
 
 * Various `filter.rank` functions calling `_core_3D` in
   `filters/rank/core_cy_3d.pyx`.  Maybe all in `rank.generic`, e.g
@@ -555,7 +625,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
           Output image.
   ```
 
-* `src/skimage/restoration/deconvolution.py` :
+* `restoration/deconvolution.py` :
 
   ```rest
   def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
@@ -904,7 +974,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Similarly for similar arguments in `ellipsoid_stats` function in same
   module.
 
-* `rag_mean_color` in `src/skimage/graph/_rag.py`.  Docstring:
+* `rag_mean_color` in `graph/_rag.py`.  Docstring:
 
   ```rest
   image : ndarray, shape(M, N[, ..., P], 3)
@@ -916,8 +986,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ```
 
   Plan:
-
-  (Assuming `channel_axis=`):
 
   ```rest
   image : N-D ndarray
@@ -942,7 +1010,9 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       corresponds to channels.
   ```
 
-* `show_rag` in `src/skimage/graph/_rag.py`.  Docstring:
+  Add `channel_axis` and use `last_channel_axis` decorator.
+
+* `show_rag` in `graph/_rag.py`.  Docstring:
 
   ```rest
   labels : ndarray, shape (M, N)
@@ -989,6 +1059,8 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       Otherwise, this parameter indicates which axis of the array corresponds
       to channels.
   ```
+
+  Use `last_channel_axis` decorator.
 
 * `autolevel_percentile`, `gradient_percentile`, `mean_percentile`, in
   `skimage/filters/rank/_percentile.py`.  Docstrings have form:
@@ -1105,7 +1177,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
   (and following).
 
-* `src/skimage/segmentation/_quickshift.py`: `quickshift`:
+* `segmentation/_quickshift.py`: `quickshift`:
 
   ```rest
   Parameters
@@ -1120,15 +1192,17 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ```rest
   Parameters
   ----------
-  image : 3D ndarray
-      Input image. The axis corresponding to color channels can be specified
-      via the `channel_axis` argument.
+  image : 3D array, representing 2D image, with channel axis, e.g (I, J, C)
+      Use the `channel_axis` parameter to specify the array axis corresponding to color channels.
   ```
-* `src/skimage/segmentation/_quickshift_cy.pyx` - replace `(M, N, C)` and `(M,
+
+* `segmentation/_quickshift_cy.pyx` - replace `(M, N, C)` and `(M,
   N)` with `(I, J, C)` and `(I, J)` throughout.
-* `src/skimage/filters/_sparse.py`: — replace `(M, N[, ...], P)` with `(I, J[,
+* `segmentation/_felzenszalb_cy.pyx` - replace `(M, N, C)` and `(M, N)` with
+  `(I, J, C)` and `(I, J)` throughout.
+* `filters/_sparse.py`: — replace `(M, N[, ...], P)` with `(I, J[,
   ...], K)`, `(M, N)` with `(I, J)`.
-* `src/skimage/filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
+* `filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
   `(I, J, K)` and `(I, J)` throughout.
 * `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
   throughout.
@@ -1681,24 +1755,6 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
       ordering.
   ```
 
-  ```rest
-  Parameters
-  ----------
-  image : ndarray
-      Input image.
-  angle : float
-      Rotation angle in degrees in counter-clockwise direction.
-  resize : bool, optional
-      Determine whether the shape of the output image will be automatically
-      calculated, so the complete rotated image exactly fits. Default is
-      False.
-  center : iterable of length 2
-      The rotation center. If ``center=None``, the image is rotated around
-      its center, i.e. ``center=(cols / 2 - 0.5, rows / 2 - 0.5)``.  Please
-      note that this parameter is (cols, rows), contrary to normal skimage
-      ordering.
-  ```
-
   Plan:
 
   ```rest
@@ -1762,19 +1818,7 @@ Generally we give angles in radians.  There are six and a half exceptions:
   keyword argument, allowing the user to use degrees instead of default
   radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.  Of course this is a private function, and it's a simple call-through to `scipy.spatial.transform.Rotation.from_euler`.
 
-Proposal: standardize to radians throughout.  Remove `degrees=False` argument to `_euler_rotation_matrix` helper function.
-
-## Color and `channel_axis`
-
-While exploring coordinates, I found several instances where the color channel is assumed to be the last.  Currently discussing whether these should now have `channel_axis=` in the Skimage2 argument list:
-
-* `manual_segmentation` and `manual_lasso_segmentation` in
-  `src/skimage/future/manual_segmentation.py` (`image : (M, N[, 3]) array`)
-  Question on Zulip; should `future` modules be ported?
-* `set_color` in `src/skimage/draw/draw.py` (`image : ndarray of shape (M, N,
-  C)`)
-* `rag_mean_color` and `show_rag` in `src/skimage/graph/_rag.py`.
-
+Proposal: standardize to radians throughout.  Remove `degrees=False` argument to `_euler_rotation_matrix` helper function.  Agreed on Zulip.
 
 ## Documentation
 
