@@ -327,7 +327,9 @@ rephrased in terms of "i, j, k ...".
 Cursor (the AI agent) identified multiple instances of row and column
 references in docstrings and variables.
 
-## Color and `channel_axis`
+## Other issues arising
+
+### Color and `channel_axis`
 
 While exploring coordinates, I found several instances where the color channel
 is assumed to be the last.  We agreed on Zulip and meeting that we should always offer `channel_axis=` in the Skimage2 argument list for functions expecting a color channel axis, and should not assume it is the last.  This applies to:
@@ -348,6 +350,154 @@ was:
 
 See comments / plans for given functions in text below.
 
+### Coordinate arguments as sequences
+
+Sometimes we specify coordinates (row and column positions) as separate
+arguments — one for row position, another for column position.   In other
+places we use sequences to specify coordinates, with one sequence or array
+argument containing both the row and column positions.   For an example of the second pattern (in `draw/draw.py`:
+
+```python
+def disk(center, radius, *, shape=None):
+    """Generate coordinates of pixels within circle.
+
+    Parameters
+    ----------
+    center : tuple
+        Center coordinate of disk.
+    radius : double
+        Radius of disk.
+    ...
+    """
+```
+
+Other examples of the one-argument-for-both pattern:
+
+* In `draw/draw.py`: `set_color(image, coords, ...)`, `def rectangle(start,
+  end=None, ...)`, `def rectangle_perimeter(start, end=None, ...)`.
+* In `draw/line_ne.py`: `def line_nd(start, stop, ...)`.
+
+* Others found by Gemini:
+
+  ```
+  - skimage.measure.profile_line(image, src, dst, ...): Uses src and dst as coordinate pairs.
+  - skimage.segmentation.flood(image, seed_point, ...): Uses a seed_point tuple.
+  ```
+
+For an example of the first (separate argument) pattern, see the docstring of
+`draw/draw.py::line`:
+
+```python
+def line(r0, c0, r1, c1):
+    """Generate line pixel coordinates.
+
+    Parameters
+    ----------
+    r0, c0 : int
+        Starting position (row, column).
+    r1, c1 : int
+        End position (row, column).
+    ...
+    """
+```
+
+Each coordinate takes up two scalar input arguments (`r0` and `c0`, `r1, c1`).
+
+We have the same pattern in (at least):
+
+* `draw/draw.py::line_aa`
+* `draw/draw.py::bezier_curve`:
+
+  ```python
+  def bezier_curve(r0, c0, r1, c1, r2, c2, weight, shape=None):`
+      ...
+  ```
+
+* `draw/draw.py::polygon_perimeter`:
+
+  ```python
+  def polygon_perimeter(r, c, shape=None, clip=False):
+      """Generate polygon perimeter coordinates.
+
+      Parameters
+      ----------
+      r : (N,) ndarray
+          Row coordinates of vertices of polygon.
+      c : (N,) ndarray
+          Column coordinates of vertices of polygon.
+      ...
+      """
+  ```
+
+* `draw/draw.py::polygon`: `r, c` arguments as above.
+
+* `draw/draw.py::circle_perimeter`: `r`, `c` arguments as above.
+
+* `draw/draw.py::circle_perimeter_aa`: `r`, `c` arguments as above.
+
+* `draw/draw.py::ellipse_perimeter_aa`: `r`, `c` arguments as above.
+
+* `draw/draw.py::ellipse`:
+
+  ```python
+  def ellipse(r, c, r_radius, c_radius, shape=None, rotation=0.0):
+      """Generate coordinates of pixels within ellipse.
+
+      Parameters
+      ----------
+      r, c : double
+          Centre coordinate of ellipse.
+      ...
+      """
+  ```
+
+* `morphology/footprints.py::_cross`:
+
+  ```python
+  def _cross(r0, r1, dtype=np.uint8):
+      """Cross-shaped structuring element of shape (r0, r1).
+
+      Only the central row and column are ones.
+      """
+  ```
+
+* Somewhat more ambiguously — `_shared/_geometry.py::polygon_clip`:
+
+  ```python
+  def polygon_clip(rp, cp, r0, c0, r1, c1):
+      """Clip a polygon to the given bounding box.
+
+      Parameters
+      ----------
+      rp, cp : (K,) ndarray of double
+          Row and column coordinates of the polygon.
+      (r0, c0), (r1, c1) : double
+          Top-left and bottom-right coordinates of the bounding box.
+      ...
+      """
+  ```
+
+  It might be reasonable to change these to `poly_coords, top_left,
+  bottom_right`.
+
+* Others identified by Gemini:
+
+  ```
+  skimage.feature
+   - multiblock_lbp(int_image, r, c, width, height): Computes the multi-block local binary pattern at a specific
+     top-left corner (r, c).
+   - draw_multiblock_lbp(image, r, c, width, height, lbp_code=0, ...): Visualizes a multi-block LBP at (r, c).
+   - haar_like_feature(int_image, r, c, width, height, ...): Computes Haar-like features for a region starting at (r,
+     c).
+   - draw_haar_like_feature(image, r, c, width, height, ...): Visualizes Haar-like features starting at (r, c).
+
+
+  skimage.filters
+   - LPIFilter2D(impulse_response, **filter_params): The impulse_response argument is a callable that must accept r
+     and c as separate vectors representing row and column positions.
+   - filter_forward, filter_inverse, and wiener: These functions also take an impulse_response callable with the same
+     separate (r, c) requirement.
+  ```
 
 ## Skimage and planes
 
