@@ -14,11 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `src/skimage/transform/_warps.py:    image : (M, N[, ...][, C]) ndarray`
-* `src/skimage/transform/_warps.py:    a : (M, N) or (M, N, P) ndarray`
-* `src/skimage/transform/_warps.py:    b : (M, N)`
-* `src/skimage/transform/_warps.py:    Color images are stored as an ``(M, N, 3)`` or ``(M, N, 4)`` arrays.`
-* `src/skimage/transform/_warps.py:    image : (M, N[, C]) ndarray`
 * `src/skimage/segmentation/active_contour_model.py:    image : ndarray of shape (M, N[, 3])`
 * `src/skimage/transform/radon_transform.py:    radon_image : ndarray, shape (M, N)`
 * `src/skimage/filters/ridges.py:    image : (M, N[, ...]) ndarray`

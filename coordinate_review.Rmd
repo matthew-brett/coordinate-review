@@ -338,13 +338,14 @@ is assumed to be the last.  We agreed on Zulip and meeting that we should always
   C)`)
 * `rag_mean_color` and `show_rag` in `graph/_rag.py`.
 * `quickshift` in `segmentation/_quickshift.py`
+* `active_contour` in `segmentation/active_contour_model.py`.
 
 We need some agreed phrasing for the names / lengths of the channel axis — for
 example for `(M, N, C)` above.  One suggestion in the meeting and on Zulip
 was:
 
 ```rest
-  image : 3D array, represending 2D image, with channel axis, e.g (I, J, C)
+  image : 3D array, representing 2D image, with channel axis, e.g (I, J, C)
       Use the `channel_axis` parameter to specify the array axis corresponding to color channels.
 ```
 
@@ -498,6 +499,24 @@ We have the same pattern in (at least):
    - filter_forward, filter_inverse, and wiener: These functions also take an impulse_response callable with the same
      separate (r, c) requirement.
   ```
+
+### Radians and degrees
+
+Generally we give angles in radians.  There are six and a half exceptions:
+
+* `transform/_warp.py::rotate` gives rotation angle in degrees.  Plan — see
+  above.
+* `transform/radon_transform.py::radon` gives projection angles `theta` in
+  degrees.
+* `transform/radon_transform.py::iradon`, and `iradon_sart` gives
+  reconstruction angles `theta` in degrees.
+* `transform/radon_transform.py::order_angles_golden_ratio` gives
+  projection angles `theta` in degrees.
+* `transform/_geometric.py::_euler_rotation_matrix` has a `degrees=False`
+  keyword argument, allowing the user to use degrees instead of default
+  radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.  Of course this is a private function, and it's a simple call-through to `scipy.spatial.transform.Rotation.from_euler`.
+
+Proposal: standardize to radians throughout.  Remove `degrees=False` argument to `_euler_rotation_matrix` helper function.  Agreed on Zulip.
 
 ## Skimage and planes
 
@@ -990,7 +1009,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Github issues, so we have data with which to optimize this routine.
   ```
 
-* `denoise_wavelet` in `skimage/restoration/_denoise.py` has the following
+* `denoise_wavelet` in `restoration/_denoise.py` has the following
   docstring:
 
   ```rest
@@ -1028,7 +1047,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ...
   ```
 
-* `denoise_nl_means` in `skimage/restoration/non_local_means.py`.  Docstring
+* `denoise_nl_means` in `restoration/non_local_means.py`.  Docstring
   is:
 
   ```rest
@@ -1052,7 +1071,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   therefore there is no special meaning that needs to be attached to a "plane"
   axis.
 
-  There are various uses of the term "plane" in `skimage/restoration/_nl_means_denoising.pyx`.  Plane seems to always mean "slice along first axis".
+  There are various uses of the term "plane" in `restoration/_nl_means_denoising.pyx`.  Plane seems to always mean "slice along first axis".
 
   Plan:
 
@@ -1213,7 +1232,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Use `last_channel_axis` decorator.
 
 * `autolevel_percentile`, `gradient_percentile`, `mean_percentile`, in
-  `skimage/filters/rank/_percentile.py`.  Docstrings have form:
+  `filters/rank/_percentile.py`.  Docstrings have form:
 
   ```rest
   Parameters
@@ -1267,22 +1286,22 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       Output image.
   ```
 
-* In `skimage/filters/lpi_filter.py`: several instances of `(M, N)`.  Can all
+* In `filters/lpi_filter.py`: several instances of `(M, N)`.  Can all
   be replaced with `(I, J)`.  Similarly, various instances of `\(r, c, ...)`.
   Can be replaced with `(i, j, ...)` with associated renaming of `r` and `c`
   in variables and docstrings.
 
-* `skimage/filters/edges.py`: all instances of `(M, N)` can be
+* `filters/edges.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.
 
-* `skimage/segmentation/_chan_vese.py`: all instances of `(M, N)` can be
+* `segmentation/_chan_vese.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.
 
-* `skimage/segmentation/thresholding.py`: all instances of `(M, N)` can be
+* `segmentation/thresholding.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
   `(I, J[, ...])`.
 
-* `skimage/io/_io.py`: `imsave`. Docstring:
+* `io/_io.py`: `imsave`. Docstring:
 
   ```rest
   Parameters
@@ -1326,6 +1345,24 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   and [Zulip
   discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
   (and following).
+
+* `segmentation/active_contour_model.py::active_contour`:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (M, N[, 3])
+      Input image.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 2- or 3-D array, with optional channel axis — e.g (I, J, C)
+      Input image.  Use `channel_axis` argument to 
+  ```
 
 * `segmentation/_quickshift.py`: `quickshift`:
 
@@ -1748,7 +1785,7 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   Suggest retaining this option in Skimage2, leaving with default `rc`
   behavior.  Perhaps we could deprecate at some later stage.
 
-* `skimage/feature/peak.py`: `_prominent_peaks`.  Docstring:
+* `feature/peak.py`: `_prominent_peaks`.  Docstring:
 
   ```rest
   Parameters
@@ -1826,7 +1863,89 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
   at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
 
-* `skimage/transform/_warps.py`: `swirl`
+* `transform/_warps.py`: `rescale`
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N[, ...][, C]) ndarray
+      Input image.
+  scale : {float, tuple of floats}
+      Scale factors for spatial dimensions. Separate scale factors can be defined as
+      (m, n[, ...]).
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : N-D array, with optionally, one channel axis — e.g (I, J, C)
+      Use the `channel_axis` parameter to specify the array axis corresponding to color channels.  Default is no channel axis.
+  scale : {float, tuple of floats}
+      Scale factors for spatial dimensions. Separate scale factors can be defined as
+      (i, j[, ...]).
+  ```
+
+* `transform/_warps.py`: `_stackcopy`:
+
+  ```rest
+  Copy b into each color layer of a, such that::
+
+    a[:,:,0] = a[:,:,1] = ... = b
+
+  Parameters
+  ----------
+  a : (M, N) or (M, N, P) ndarray
+      Target array.
+  b : (M, N)
+      Source array.
+
+  Notes
+  -----
+  Color images are stored as an ``(M, N, 3)`` or ``(M, N, 4)`` arrays.
+  ```
+
+  Plan:
+
+  ```rest
+  Copy b into each color layer of a, such that::
+
+    a[:,:,0] = a[:,:,1] = ... = b
+
+  Parameters
+  ----------
+  a : (I, J) or (I, J, C) ndarray
+      Target array.
+  b : (I, J)
+      Source array.
+
+  Notes
+  -----
+  Color images are stored as an ``(I, J, 3)`` or ``(I, J, 4)`` arrays.
+  ```
+
+* `transform/_warps.py`: `warp_polar`
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N[, C]) ndarray
+      Input image. For multichannel images `channel_axis` has to be specified.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N[, C]) ndarray
+      Input image. For multichannel images `channel_axis` has to be specified.
+  image : 2- or 3-D array, with optionally, one channel axis — e.g (I, J, C)
+      Use the `channel_axis` parameter to specify the array axis corresponding to color channels.  Default is no channel axis.
+  ```
+
+* `transform/_warps.py`: `swirl`
 
   ```rest
   Parameters
@@ -1883,7 +2002,7 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   >>> assert np.all(s_img_1 == s_img_2)
   ```
 
-* `skimage/transform/_warps.py`: `rotate`
+* `transform/_warps.py`: `rotate`
 
   ```rest
   """Rotate image by a certain angle around its center.
@@ -1951,24 +2070,6 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   >>> # The Skimage 1 and 2 code are equivalent.
   >>> assert np.all(r_img_1 == r_img_2)
   ```
-
-## Radians and degrees
-
-Generally we give angles in radians.  There are six and a half exceptions:
-
-* `transform/_warp.py::rotate` gives rotation angle in degrees.  Plan — see
-  above.
-* `transform/radon_transform.py::radon` gives projection angles `theta` in
-  degrees.
-* `transform/radon_transform.py::iradon`, and `iradon_sart` gives
-  reconstruction angles `theta` in degrees.
-* `transform/radon_transform.py::order_angles_golden_ratio` gives
-  projection angles `theta` in degrees.
-* `transform/_geometric.py::_euler_rotation_matrix` has a `degrees=False`
-  keyword argument, allowing the user to use degrees instead of default
-  radians.  A Github search of `/[ .]_euler_rotation_matrix\(/ AND NOT path:skimage` finds no-one using this with the `degrees=True` option.  Of course this is a private function, and it's a simple call-through to `scipy.spatial.transform.Rotation.from_euler`.
-
-Proposal: standardize to radians throughout.  Remove `degrees=False` argument to `_euler_rotation_matrix` helper function.  Agreed on Zulip.
 
 ## Documentation
 
