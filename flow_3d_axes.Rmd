@@ -1,0 +1,82 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.19.1
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python}
+import numpy as np
+
+import transpose_invariance as tpi
+
+import skimage as ski
+import skimage.registration as skr
+```
+
+See the analysis in `ai_output/gemini_flow_invariance.md`.
+
+```{python}
+imgs = list(tpi.get_3d_images())
+for i in (0, 1):
+    imgs[0] = ski.img_as_float(imgs[0][:10, :64, :64])
+img = imgs[0]
+```
+
+```{python}
+img.shape
+```
+
+```{python}
+def f_tvl1(fixed):
+    moving = np.roll(fixed, shift=(1, 2, 3), axis=(0, 1, 2))
+    return skr.optical_flow_tvl1(fixed, moving)
+
+def f_ilk(fixed):
+    moving = np.roll(fixed, shift=(1, 2, 3), axis=(0, 1, 2))
+    return skr.optical_flow_ilk(fixed, moving)
+```
+
+```{python}
+ws_orig = f_tvl1(img)
+```
+
+```{python}
+def check_func(img1, img2):
+    assert np.allclose(img1, img2)
+```
+
+```{python}
+def rolled_proc_flow(img, axes, func):
+    r_img = np.transpose(img, axes)
+    f_r_img = func(r_img)
+    # Roll and resort axes, coords
+    c_last = np.moveaxis(f_r_img, 0, -1)
+    back_axes = list(np.argsort(axes))
+    clt = np.transpose(c_last, back_axes + [-1])
+    c_first = np.moveaxis(clt, -1, 0)
+    # Reorder coordinates.
+    return c_first[back_axes]
+```
+
+```{python}
+ws_rolled = rolled_proc_flow(img, (2, 1, 0), f_tvl1)
+np.max(np.abs(ws_orig - ws_rolled))
+# check_func(ws_orig, ws_rolled)
+```
+
+```{python}
+ws_orig[:, 0, 0, 0], ws_rolled[:, 0, 0, 0]
+```
+
+```{python}
+# All images are transpose invariant
+tpi.assert_all_orders(imgs, f_tvl1, chk_func=check_func)
+```

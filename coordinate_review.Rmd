@@ -794,6 +794,11 @@ If that is not true, then the function may not be transpose invariant, and I'll 
           Output image.
   ```
 
+* `filters/_gabor.py`: `(M, N)` to `(I, J)` throughout.
+* `filters/_sparse.py`: — replace `(M, N[, ...], P)` with `(I, J[,
+  ...], K)`, `(M, N)` with `(I, J)`.
+* `filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
+  `(I, J, K)` and `(I, J)` throughout.
 * `restoration/deconvolution.py` :
 
   ```rest
@@ -1143,6 +1148,8 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Similarly for similar arguments in `ellipsoid_stats` function in same
   module.
 
+* `feature/corner.py`: — replace `(M, N)` with and `(I, J)` throughout.
+
 * `rag_mean_color` in `graph/_rag.py`.  Docstring:
 
   ```rest
@@ -1302,14 +1309,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Replace `(M, N[, ...])` with `(I, J[, ...])`, `(M, N,[ P])` with `(I, J[,
   K])`
 
-
-* `segmentation/_chan_vese.py`: all instances of `(M, N)` can be
-  replaced with `(I, J)`.
-
-* `segmentation/thresholding.py`: all instances of `(M, N)` can be
-  replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
-  `(I, J[, ...])`.
-
 * `io/_io.py`: `imsave`. Docstring:
 
   ```rest
@@ -1355,6 +1354,87 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
   (and following).
 
+* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
+  throughout.
+
+* `segmentation/_chan_vese.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.
+
+* `segmentation/random_walker_segmentation.py::random_walker`.
+
+  ```rest
+  data : (M, N[, P][, C]) ndarray
+      Image to be segmented in phases. Gray-level `data` can be two- or
+      three-dimensional; multichannel data can be three- or four-
+      dimensional with `channel_axis` specifying the dimension containing
+      channels. Data spacing is assumed isotropic unless the `spacing`
+      keyword argument is used.
+  labels : (M, N[, P]) array of ints
+      Array of seed markers labeled with different positive integers
+      for different phases. Zero-labeled pixels are unlabeled pixels.
+      Negative labels correspond to inactive pixels that are not taken
+      into account (they are removed from the graph). If labels are not
+      consecutive integers, the labels array will be transformed so that
+      labels are consecutive. In the multichannel case, `labels` should have
+      the same shape as a single channel of `data`, i.e. without the final
+      dimension denoting channels.
+  ...
+  spacing : iterable of floats, optional
+      Spacing between voxels in each spatial dimension. If `None`, then
+      the spacing between pixels/voxels in each dimension is assumed 1.
+  ...
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  Random-walker is transpose invariant: see `./random_walker_3d_axes.ipynb`.
+
+  Plan:
+
+  ```rest
+  data : 2-4D ndarray, optional channel axis, e.g (I, J), (I, J, K), (I, J, C)
+      Image to be segmented in phases. Gray-level `data` can be two- or
+      three-dimensional; multichannel data can be three- or four-
+      dimensional with `channel_axis` specifying the dimension containing
+      channels. Data spacing is assumed isotropic unless the `spacing`
+      keyword argument is used.
+  labels : (I, J[, K]) array of ints
+      Array of seed markers labeled with different positive integers
+      for different phases. Zero-labeled pixels are unlabeled pixels.
+      Negative labels correspond to inactive pixels that are not taken
+      into account (they are removed from the graph). If labels are not
+      consecutive integers, the labels array will be transformed so that
+      labels are consecutive. In the multichannel case, `labels` should have
+      the same shape as a single channel of `data`, i.e. without the final
+      dimension denoting channels.
+  ...
+  spacing : iterable of floats, optional
+      Spacing between voxels in each spatial dimension. If `None`, then
+      the spacing between pixels/voxels in each dimension is assumed 1.
+  ...
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+* `segmentation/thresholding.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
+  `(I, J[, ...])`.
+
+* `transform/_geometric.py`: — replace `(M, N)` with and `(I, J)` throughout.
+
+* `transform/_warps_cy.pyx`: — replace `(M, N)` with and `(I, J)`.
+
+* `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
+  refer to `(M, N,[ P])` input and output arguments.  There is nothing to indicate these treat any dimension as special.   Asked on Zulip.
+
+  Plan:
+
+  Replace `(M, N[, P])` with `(I, J[, K])` throughout.
+
 * `segmentation/active_contour_model.py::active_contour`:
 
   ```rest
@@ -1373,16 +1453,12 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       Input image.  Use `channel_axis` argument to specify axis with color
       channel.
   ...
-  channel_axis : str or int, optional
+  channel_axis : int or None, optional
       This parameter indicates which axis of the `image` array corresponds to
-      color channels.  Defaults to `last-if-3d`.  The default specifies that
-      the last axis is the color channel, if the image array is 3-D; for 2-D
-      images, there is no color channel.  An int gives the array axis
-      containing the color channel.
+      color channels.  Ignored if `image` is 2D.
   ```
 
-  Add `last_channel_axis` decorator, and adapt to allow `last-if-3d`.  Or write
-  logic inside function.  Test.
+  Add `last_channel_axis` decorator.
 
 * `segmentation/_quickshift.py`: `quickshift`:
 
@@ -1405,16 +1481,36 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
 * `segmentation/_quickshift_cy.pyx` - replace `(M, N, C)` and `(M,
   N)` with `(I, J, C)` and `(I, J)` throughout.
+* `segmentation/_felzenszalb.py::felzenszalb`:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (M, N[, 3])
+      Input image.
+  ...
+  Returns
+  -------
+  segment_mask : ndarray of shape (M, N)
+      Integer mask indicating segment labels.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 2- or 3-D array, with optional channel axis, e.g (I, J), or (I, J, C)
+      Use the `channel_axis` parameter to specify the array axis corresponding to color channels, if any.
+  ...
+  Returns
+  -------
+  segment_mask : ndarray of shape (I, J)
+      Integer mask indicating segment labels.
+  ```
+
 * `segmentation/_felzenszalb_cy.pyx` - replace `(M, N, C)` and `(M, N)` with
   `(I, J, C)` and `(I, J)` throughout.
-* `filters/_sparse.py`: — replace `(M, N[, ...], P)` with `(I, J[,
-  ...], K)`, `(M, N)` with `(I, J)`.
-* `filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
-  `(I, J, K)` and `(I, J)` throughout.
-* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
-  throughout.
-* `feature/corner.py`: — replace `(M, N)` with and `(I, J)` throughout.
-
 * See the "Not checked" section in `mn.md` for instances as above I have not
   checked yet.
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
@@ -1885,6 +1981,8 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
 
 * `transform/radon_transform.py`: `iradon_sart`.  Replace (M, N) with (I, J),
   and edit rest of docstring to match.
+
+* `transform/_radon_transform.pyx`: Replace (M, N) with (I, J) throughout.
 
 * `transform/_warps.py`: `rescale`
 

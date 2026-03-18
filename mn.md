@@ -14,22 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
-* `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
-* `src/skimage/transform/_radon_transform.pyx:    image_update : ndarray of float, shape (M, N)`
-* `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
-* `src/skimage/transform/_radon_transform.pyx:    image_update : ndarray of float, shape (M, N)`
-* `src/skimage/filters/_gabor.py:    image : ndarray of shape (M, N)`
-* `src/skimage/filters/_gabor.py:    real, imag : ndarray of shape (M, N)`
-* `src/skimage/segmentation/_felzenszwalb_cy.pyx:    image : (M, N, C) ndarray`
-* `src/skimage/segmentation/_felzenszwalb_cy.pyx:    segment_mask : (M, N) ndarray`
-* `src/skimage/transform/_geometric.py:    src : (M, N) array_like`
-* `src/skimage/transform/_geometric.py:    dst : (M, N) array_like`
-* `src/skimage/transform/_warps_cy.pyx:    image : ndarray, shape (M, N)`
-* `src/skimage/segmentation/_felzenszwalb.py:    image : ndarray of shape (M, N[, 3])`
-* `src/skimage/segmentation/_felzenszwalb.py:    segment_mask : ndarray of shape (M, N)`
-* `src/skimage/segmentation/random_walker_segmentation.py:    data : (M, N[, P][, C]) ndarray`
-* `src/skimage/segmentation/random_walker_segmentation.py:    labels : (M, N[, P]) array of ints`
 * `src/skimage/segmentation/boundaries.py:    image : ndarray of shape (M, N[, 3])`
 * `src/skimage/segmentation/boundaries.py:    label_img : ndarray of shape (M, N) and dtype int`
 * `src/skimage/segmentation/boundaries.py:    marked : ndarray of shape (M, N, 3) and dtype float`
@@ -39,14 +23,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 * `src/skimage/restoration/_denoise.py:    image : ndarray, shape (M, N[, 3])`
 * `src/skimage/restoration/deconvolution.py:    image : ndarray of shape (M, N)`
 * `src/skimage/restoration/deconvolution.py:    x_postmean : ndarray of shape (M, N)`
-* `src/skimage/registration/_optical_flow.py:    reference_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    moving_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    reference_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    moving_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    reference_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    moving_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    reference_image : ndarray, shape (M, N[, P[, ...]])`
-* `src/skimage/registration/_optical_flow.py:    moving_image : ndarray, shape (M, N[, P[, ...]])`
 * `src/skimage/feature/_haar.pyx:    int_image : (M, N) ndarray`
 * `src/skimage/feature/_daisy.py:    image : (M, N) array`
 * `src/skimage/feature/_daisy.py:    descs_img : ndarray of shape (M, N, 3), only if visualize=True`
