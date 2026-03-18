@@ -2171,7 +2171,7 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   ```rest
   There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
 
-  The first is that Skimage2 expects *radians* for the `angle` argume to rotate.  Skimage2 expected *degrees*.
+  The first is that Skimage2 expects *radians* for the `angle` argume to rotate.  Skimage1 expected *degrees*.
 
   The second is that Skimage2 specifes the center for rotation as a coordinate
   in i, j (row, column) order, whereas Skimage1 asked for the center in
