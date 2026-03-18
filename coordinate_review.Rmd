@@ -1429,7 +1429,9 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 * `transform/_warps_cy.pyx`: — replace `(M, N)` with and `(I, J)`.
 
 * `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
-  refer to `(M, N,[ P])` input and output arguments.  There is nothing to indicate these treat any dimension as special.   Asked on Zulip.
+  refer to `(M, N,[ P])` input and output arguments.  There is nothing to
+  indicate these treat any dimension as special.   Adequately
+  transpose-invariant (`./flow_3d_axes.ipynb`).  See summary in `ai_output/gemini_flow_invariance.md`.
 
   Plan:
 

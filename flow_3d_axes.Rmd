@@ -24,9 +24,8 @@ import skimage.registration as skr
 See the analysis in `ai_output/gemini_flow_invariance.md`.
 
 ```{python}
-imgs = list(tpi.get_3d_images())
-for i in (0, 1):
-    imgs[0] = ski.img_as_float(imgs[0][:10, :64, :64])
+imgs = [ski.img_as_float(img)[:10, :64, :64]
+        for img in tpi.get_3d_images()]
 img = imgs[0]
 ```
 
@@ -35,48 +34,48 @@ img.shape
 ```
 
 ```{python}
-def f_tvl1(fixed):
-    moving = np.roll(fixed, shift=(1, 2, 3), axis=(0, 1, 2))
+def f_tvl1(fixed, moving):
     return skr.optical_flow_tvl1(fixed, moving)
 
-def f_ilk(fixed):
-    moving = np.roll(fixed, shift=(1, 2, 3), axis=(0, 1, 2))
+def f_ilk(fixed, moving):
     return skr.optical_flow_ilk(fixed, moving)
 ```
 
 ```{python}
-ws_orig = f_tvl1(img)
-```
-
-```{python}
-def check_func(img1, img2):
-    assert np.allclose(img1, img2)
+moving = np.roll(img, shift=(1, 2, 3), axis=(0, 1, 2))
+ws_orig = f_tvl1(img, moving)
 ```
 
 ```{python}
 def rolled_proc_flow(img, axes, func):
+    # Add small shift
+    moving = np.roll(img, shift=(1, 2, 3), axis=(0, 1, 2))
     r_img = np.transpose(img, axes)
-    f_r_img = func(r_img)
-    # Roll and resort axes, coords
-    c_last = np.moveaxis(f_r_img, 0, -1)
-    back_axes = list(np.argsort(axes))
-    clt = np.transpose(c_last, back_axes + [-1])
-    c_first = np.moveaxis(clt, -1, 0)
-    # Reorder coordinates.
-    return c_first[back_axes]
+    r_moving = np.transpose(moving, axes)
+    f_r_img = func(r_img, r_moving)
+    # Output has shape (f_r_img.ndim,) + f_r_img.shape
+    # Resort xes
+    ax_order = np.argsort(axes)
+    back_axes = [0] + list(ax_order + 1)
+    # Resort axes and coord rows.
+    return np.transpose(f_r_img, back_axes)[ax_order]
 ```
 
 ```{python}
 ws_rolled = rolled_proc_flow(img, (2, 1, 0), f_tvl1)
 np.max(np.abs(ws_orig - ws_rolled))
-# check_func(ws_orig, ws_rolled)
-```
-
-```{python}
-ws_orig[:, 0, 0, 0], ws_rolled[:, 0, 0, 0]
 ```
 
 ```{python}
 # All images are transpose invariant
-tpi.assert_all_orders(imgs, f_tvl1, chk_func=check_func)
+for func in f_tvl1, f_ilk:
+    print(func)
+    for i, img in enumerate(imgs):
+        moving = np.roll(img, shift=(1, 2, 3), axis=(0, 1, 2))
+        orig = func(img, moving)
+        print(f'Image {i}')
+        for order in tpi.orderings:
+            print(f'Ordering {order}')
+            rolled = rolled_proc_flow(img, order, func)
+            assert np.allclose(rolled, orig, atol=1e-5)
 ```
