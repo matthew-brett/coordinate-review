@@ -21,6 +21,76 @@ import skimage as ski
 import skimage.filters.ridges as sfr
 ```
 
+See the analysis in `ai_output/gemini_ridge_invariance.md`.  This is the change Gemini suggested to make the filters transpose invariant.
+
+The notebook ran with this fix in place (at commit `ea7afcbff`).
+
+```diff
+diff --git a/src/skimage/feature/corner.py b/src/skimage/feature/corner.py
+index a50d01c2b..99d31d9df 100644
+--- a/src/skimage/feature/corner.py
++++ b/src/skimage/feature/corner.py
+@@ -215,10 +215,15 @@ def _hessian_matrix_with_gaussian(image, sigma=1, mode='reflect', cval=0, order=
+     axes = range(ndim)
+     if order == 'xy':
+         axes = reversed(axes)
+-    H_elems = [
+-        gaussian_(gradients[ax0], order=orders[ax1])
+-        for ax0, ax1 in combinations_with_replacement(axes, 2)
+-    ]
++    H_elems = []
++    for ax0, ax1 in combinations_with_replacement(axes, 2):
++        if ax0 == ax1:
++            H_elems.append(gaussian_(gradients[ax0], order=orders[ax0]))
++        else:
++            # Symmetrize off-diagonals
++            h_ij = gaussian_(gradients[ax0], order=orders[ax1])
++            h_ji = gaussian_(gradients[ax1], order=orders[ax0])
++            H_elems.append(0.5 * (h_ij + h_ji))
+     return H_elems
+```
+
+
+We also get transpose invariance from this source change, instead of the change above:
+
+```diff
+diff --git a/src/skimage/filters/ridges.py b/src/skimage/filters/ridges.py
+index f43c5b12a..91791807d 100644
+--- a/src/skimage/filters/ridges.py
++++ b/src/skimage/filters/ridges.py
+@@ -82,7 +82,7 @@ def meijering(
+     for sigma in sigmas:  # Filter for all sigmas.
+         eigvals = hessian_matrix_eigvals(
+             hessian_matrix(
+-                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=True
++                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=False
+             )
+         )
+         # Compute normalized eigenvalues l_i = e_i + sum_{j!=i} alpha * e_j.
+@@ -158,7 +158,7 @@ def sato(image, sigmas=range(1, 10, 2), black_ridges=True, mode='reflect', cval=
+     for sigma in sigmas:  # Filter for all sigmas.
+         eigvals = hessian_matrix_eigvals(
+             hessian_matrix(
+-                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=True
++                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=False
+             )
+         )
+         # Compute normalized tubeness (eqs. (9) and (22), ref. [1]_) as the
+@@ -279,7 +279,7 @@ def frangi(
+     for sigma in sigmas:  # Filter for all sigmas.
+         eigvals = hessian_matrix_eigvals(
+             hessian_matrix(
+-                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=True
++                image, sigma, mode=mode, cval=cval, use_gaussian_derivatives=False
+             )
+         )
+         # Sort eigenvalues by magnitude.
+```
+
+
+```diff
+```
+
 ```{python}
 imgs = tpi.get_3d_images()
 img = imgs[0]
@@ -47,16 +117,12 @@ ws_orig = func(img)
 
 ```{python}
 def check_func(img1, img2):
-    assert np.allclose(img1, img2, atol=1e-5)
+    assert np.allclose(img1, img2)
 ```
 
 ```{python}
 ws_rolled = tpi.rolled_proc(img, (2, 1, 0), func)
 check_func(ws_orig, ws_rolled)
-```
-
-```{python}
-np.max(np.abs(ws_rolled, ws_orig))
 ```
 
 ```{python}

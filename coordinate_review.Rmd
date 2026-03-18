@@ -1294,6 +1294,15 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 * `filters/edges.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.
 
+* `filters/ridges.py`.  See exploration in `ridges_3d_axes.ipynb`, and
+  investigation by Gemini in `ai_output/gemini_ridge_invariance.md`.  Summary — apparent lack of transpose invariance is due to numerical instabilities in the axis order in which the Hessian is calculated; this can be fixed with a simple numerical stability change, noted in the notebook.  There is no fundamental meaning being attributed to a third axis.  Therefore:
+
+  Plan:
+
+  Replace `(M, N[, ...])` with `(I, J[, ...])`, `(M, N,[ P])` with `(I, J[,
+  K])`
+
+
 * `segmentation/_chan_vese.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.
 

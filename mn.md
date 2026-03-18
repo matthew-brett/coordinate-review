@@ -14,14 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `src/skimage/filters/ridges.py:    image : (M, N[, ...]) ndarray`
-* `src/skimage/filters/ridges.py:    out : (M, N[, ...]) ndarray`
-* `src/skimage/filters/ridges.py:    image : (M, N[, P]) ndarray`
-* `src/skimage/filters/ridges.py:    out : (M, N[, P]) ndarray`
-* `src/skimage/filters/ridges.py:    image : (M, N[, P]) ndarray`
-* `src/skimage/filters/ridges.py:    out : (M, N[, P]) ndarray`
-* `src/skimage/filters/ridges.py:    image : (M, N[, P]) ndarray`
-* `src/skimage/filters/ridges.py:    out : (M, N[, P]) ndarray`
 * `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
 * `src/skimage/transform/_radon_transform.pyx:    image : ndarray of float, shape (M, N)`
 * `src/skimage/transform/_radon_transform.pyx:    image_update : ndarray of float, shape (M, N)`
