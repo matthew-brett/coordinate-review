@@ -14,8 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `src/skimage/segmentation/active_contour_model.py:    image : ndarray of shape (M, N[, 3])`
-* `src/skimage/transform/radon_transform.py:    radon_image : ndarray, shape (M, N)`
 * `src/skimage/filters/ridges.py:    image : (M, N[, ...]) ndarray`
 * `src/skimage/filters/ridges.py:    out : (M, N[, ...]) ndarray`
 * `src/skimage/filters/ridges.py:    image : (M, N[, P]) ndarray`

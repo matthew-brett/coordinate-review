@@ -1213,7 +1213,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       should be same shape as `labels`.  If `img_cmap` is `None` (default is
       `'bone'`), the image should be in RGB format with channel axis indicated
       by `channel_axis`.  For example, if `labels` is shape (I, J), and
-      `channel_axis=-1` (the default), then `image` should be shape (I, J, C),
+      `channel_axis=-1` (the default), then `image` should be hape (I, J, C),
       where C is the length of the color axis (3 or 4).
   ...
 
@@ -1360,9 +1360,20 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ```rest
   Parameters
   ----------
-  image : 2- or 3-D array, with optional channel axis — e.g (I, J, C)
-      Input image.  Use `channel_axis` argument to 
+  image : 2D/3D array, optional channel axis — e.g shape (I, J) or (I, J, C)
+      Input image.  Use `channel_axis` argument to specify axis with color
+      channel.
+  ...
+  channel_axis : str or int, optional
+      This parameter indicates which axis of the `image` array corresponds to
+      color channels.  Defaults to `last-if-3d`.  The default specifies that
+      the last axis is the color channel, if the image array is 3-D; for 2-D
+      images, there is no color channel.  An int gives the array axis
+      containing the color channel.
   ```
+
+  Add `last_channel_axis` decorator, and adapt to allow `last-if-3d`.  Or write
+  logic inside function.  Test.
 
 * `segmentation/_quickshift.py`: `quickshift`:
 
@@ -1862,6 +1873,9 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   Having said that, searching Github, I could find [maybe one
   attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
   at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
+
+* `transform/radon_transform.py`: `iradon_sart`.  Replace (M, N) with (I, J),
+  and edit rest of docstring to match.
 
 * `transform/_warps.py`: `rescale`
 
