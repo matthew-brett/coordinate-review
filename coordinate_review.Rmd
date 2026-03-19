@@ -339,6 +339,7 @@ is assumed to be the last.  We agreed on Zulip and meeting that we should always
 * `rag_mean_color` and `show_rag` in `graph/_rag.py`.
 * `quickshift` in `segmentation/_quickshift.py`
 * `active_contour` in `segmentation/active_contour_model.py`.
+* `mark_boundaries` in `segmentation/boundaries.py`.
 
 We need some agreed phrasing for the names / lengths of the channel axis — for
 example for `(M, N, C)` above.  One suggestion in the meeting and on Zulip
@@ -799,299 +800,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ...], K)`, `(M, N)` with `(I, J)`.
 * `filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
   `(I, J, K)` and `(I, J)` throughout.
-* `restoration/deconvolution.py` :
-
-  ```rest
-  def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
-      """Richardson-Lucy deconvolution.
-
-      Parameters
-      ----------
-      image : ([P, ]M, N) ndarray
-         Input degraded image (can be n-dimensional). If you keep the
-         default `clip=True` parameter, you may want to normalize
-         the image so that its values fall in the [-1, 1] interval to avoid
-         information loss.
-      ...
-  ```
-
-  This ends up calling `scipy.signal.convolve` on the input array, so no
-  semantic meaning to the axes, and docstring better put as:
-
-  Plan:
-
-  ```rest
-      Parameters
-      ----------
-      image : N-D ndarray
-  ```
-
-* `segmentation/_watershed.py` `watershed` function:
-
-  ```rest
-  def watershed(
-      image,
-      markers=None,
-      connectivity=1,
-      offset=None,
-      mask=None,
-      compactness=0,
-      watershed_line=False,
-  ):
-    """Find watershed basins in an image flooded from given markers.
-
-    Parameters
-    ----------
-    image : (M, N[, ...]) ndarray
-        Data array where the lowest value points are labeled first.
-    markers : int, or (M, N[, ...]) ndarray of int, optional
-        The desired number of basins, or an array marking the basins with the
-        values to be assigned in the label matrix. Zero means not a marker. If
-        None, the (default) markers are determined as the local minima of
-        `image`. Specifically, the computation is equivalent to applying
-        :func:`skimage.morphology.local_minima` onto `image`, followed by
-        :func:`skimage.measure.label` onto the result (with the same given
-        `connectivity`). Generally speaking, users are encouraged to pass
-        markers explicitly.
-    connectivity : int or ndarray, optional
-        The neighborhood connectivity. An integer is interpreted as in
-        ``scipy.ndimage.generate_binary_structure``, as the maximum number
-        of orthogonal steps to reach a neighbor. An array is directly
-        interpreted as a footprint (structuring element). Default value is 1.
-        In 2D, 1 gives a 4-neighborhood while 2 gives an 8-neighborhood.
-    offset : array_like of shape image.ndim, optional
-        The coordinates of the center of the footprint.
-    mask : (M, N[, ...]) ndarray of bools or 0's and 1's, optional
-        Array of same shape as `image`. Only points at which mask == True
-        will be labeled.
-    compactness : float, optional
-        Use compact watershed [1]_ with given compactness parameter.
-        Higher values result in more regularly-shaped watershed basins.
-    watershed_line : bool, optional
-        If True, a one-pixel wide line separates the regions
-        obtained by the watershed algorithm. The line has the label 0.
-        Note that the method used for adding this line expects that
-        marker regions are not adjacent; the watershed line may not catch
-        borders between adjacent marker regions.
-
-    Returns
-    -------
-    out : ndarray
-        A labeled matrix of the same type and shape as `markers`.
-  ```
-
-  This looks like a generic N-D function.  However, tests of the type in
-  `watershed_3d_axes.ipynb` show that the function is not transpose invariant,
-  in the presence of tied values in the image.  This is expected, because, in
-  the presence of ties, ties identified first in the neighborhood get
-  processed first, and the axis ordering dictates the ordering of neighbors.
-  However, if I make the image values unique, the routine is transpose
-  invariant (see the notebook).
-
-  Plan:
-
-  Change `(M, N[, ...])` to `(I, J[, ...])`.  Consider adding note about ties
-  and axis ordering in the code comments — it's probably too niche to put into
-  the docstring.
-
-* `segmentation/slic_superpixels.py`: `slic` function.  Docstring:
-
-  ```rest
-  Segments image using k-means clustering in Color-(x,y,z) space.
-
-  Parameters
-  ----------
-  image : (M, N[, P][, C]) ndarray
-      Input image. Can be 2D or 3D, and grayscale or multichannel
-      (see `channel_axis` parameter).
-      Input image must either be NaN-free or the NaN's must be masked out.
-  ...
-  channel_axis : int or None, optional
-      If None, the image is assumed to be a grayscale (single channel) image.
-      Otherwise, this parameter indicates which axis of the array corresponds
-      to channels.
-  ```
-
-  Related, we have this in the called `segmentation/_slic.pyx:_slic_cython` docstring:
-
-  ```rest
-  Helper function for SLIC segmentation.
-
-  Parameters
-  ----------
-  image_zyx : 4D array of np_floats, shape (Z, Y, X, C)
-      The input image.
-  mask : 3D array of bool, shape (Z, Y, X), optional
-      The input mask.
-  segments : 2D array of np_floats, shape (N, 3 + C)
-      The initial centroids obtained by SLIC as [Z, Y, X, C...].
-
-  ...
-
-  Returns
-  -------
-  nearest_segments : 3D array of int, shape (Z, Y, X)
-      The label field/superpixels found by SLIC.
-
-  Notes
-  -----
-  The image is considered to be in (z, y, x) order, which can be
-  surprising. More commonly, the order (x, y, z) is used. However,
-  in 3D image analysis, 'z' is usually the "special" dimension, with,
-  for example, a different effective resolution than the other two
-  axes. Therefore, x and y are often processed together, or viewed as
-  a cut-plane through the volume. So, if the order was (x, y, z) and
-  we wanted to look at the 5th cut plane, we would write::
-
-      my_z_plane = img3d[:, :, 5]
-
-  but, assuming a C-contiguous array, this would grab a discontiguous
-  slice of memory, which is bad for performance. In contrast, if we
-  see the image as (z, y, x) ordered, we would do::
-
-      my_z_plane = img3d[5]
-
-  and get back a contiguous block of memory. This is better both for
-  performance and for readability.
-  ```
-
-  Testing finds that `slic` is transpose invariant for the `cell3d` images,
-  but not for the `brain` image.  Gemini asserts that this is due to ties in
-  the k-means algorithm leading to slightly different regions within
-  background — see `ai_outputs/slic_transpose_invariance.md`.  Indeed the
-  notebook `slic_3d_axes.ipynb` confirms invariance for a version of the brain
-  image without ties.  [JNI asserted invariance on
-  Zulip](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/576963786).
-
-  Note that the channel axis can be any axis, but the `channel_as_last_axis`
-  decorator will transpose the channel axis to be the final axis before
-  delegating to the function, and retranspose on output.
-
-  Plan:
-
-  Rewrite `slic`: docstring from the above, to:
-
-  ```rest
-  Parameters
-  ----------
-  image : array of 2, 3 or 4 dimensions
-      Input image. Can be a 2D or 3D image, in grayscale (`image` has 2 or 3 dimensions) or multichannel (`image` has 3 or 4 dimensions).  For multichannel images, use the `channel_axis` parameter to specify the channel axis. Input image must either be NaN-free or the
-      NaNs must be masked out.
-  ...
-  ```
-
-  Rewrite `_slic_cython` docstring from the above, to:
-
-  ```rest
-  Helper function for SLIC segmentation.
-
-  Parameters
-  ----------
-  image_ijkc : 4D array of np_floats, shape (I, J, K, C)
-      The input image.
-  mask : 3D array of bool, shape (I, J, K), optional
-      The input mask.
-  segments : 2D array of np_floats, shape (N, 3 + C)
-      The initial centroids obtained by SLIC as [I, J, K, C...].
-
-  ...
-
-  Returns
-  -------
-  nearest_segments : 3D array of int, shape (I, J, K)
-      The label field/superpixels found by SLIC.
-
-  Notes
-  -----
-  The performance of this routine may depend on the memory ordering of the
-  `image_ijkc`.   This routine was designed with the assumption that the array
-  is C-contiguous, so that the last axis is the fastest-changing in memory,
-  and the first axis is the slowest-changing in memory.  As for standard
-  routines operating on Numpy arrays, this function will work with any memory
-  ordering, but it may well be slower for memory orderings other than
-  C-contiguous. Please benchmark your code if peformance of this routine is
-  important to you.  Please also consider letting us know your results via our
-  Github issues, so we have data with which to optimize this routine.
-  ```
-
-* `denoise_wavelet` in `restoration/_denoise.py` has the following
-  docstring:
-
-  ```rest
-  Perform wavelet denoising on an image.
-
-  Parameters
-  ----------
-  image : ndarray (M[, N[, ...P]][, C]) of ints, uints or floats
-      Input data to be denoised. `image` can be of any numeric type,
-      but it is cast into an ndarray of floats for the computation
-      of the denoised image.
-  ...
-  ```
-
-  As for `watershed`, one can specify the `channel_axis`.
-  `denoise_3d_axes.ipynb` shows that this denoising is transpose invariant, at
-  least to fairly small tolerance.
-
-  Plan:
-
-  Rewrite docstring to:
-
-  ```rest
-  Perform wavelet denoising on an image.
-
-  Parameters
-  ----------
-  image : array of 2, 3 or 4 dimensions of ints, uints or floats
-      Input image to be denoised. Can be a 2D or 3D image, in grayscale
-      (`image` has 2 or 3 dimensions) or multichannel (`image` has 3 or
-      4 dimensions).  For multichannel images, use the `channel_axis`
-      parameter to specify the channel axis. `image` can be of any numeric
-      type, but it is cast into an ndarray of floats for the computation of
-      the denoised image.
-  ...
-  ```
-
-* `denoise_nl_means` in `restoration/non_local_means.py`.  Docstring
-  is:
-
-  ```rest
-  image : 2D or 3D ndarray
-      Input image to be denoised, which can be 2D or 3D, and grayscale
-      or RGB (for 2D images only, see ``channel_axis`` parameter). There can
-      be any number of channels (does not strictly have to be RGB).
-
-  ...
-
-  channel_axis : int or None, optional
-      If None, the image is assumed to be a grayscale (single channel) image.
-      Otherwise, this parameter indicates which axis of the array corresponds
-      to channels.
-  ```
-
-  In fact, it seems that the routine will handle 3 or 4D images with a color
-  channel (up to 5 dimensional array).
-
-  `nl_means_3d_axes.ipynb` shows that the routine is transpose invariant;
-  therefore there is no special meaning that needs to be attached to a "plane"
-  axis.
-
-  There are various uses of the term "plane" in `restoration/_nl_means_denoising.pyx`.  Plane seems to always mean "slice along first axis".
-
-  Plan:
-
-  Rewrite docstring as:
-
-  ```rest
-  image : array of 2 to 5 dimensions
-      Input image. Can be a 2D, 3D or 4D image, in grayscale (`image` has 2,
-      3 or 4 dimensions) or multichannel (`image` has 3, 4 or 5 dimensions).
-      For multichannel images, use the `channel_axis` parameter to specify the
-      channel axis.  There can be any number of channels (does not strictly have to be RGB).
-  ...
-  ```
-
-  Replace uses of plane, row, column in Cython code with i, j, k.
 
 * `draw.draw3d` has `ellipsoid` with docstring:
 
@@ -1357,6 +1065,167 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 * `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
   throughout.
 
+* `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
+  refer to `(M, N,[ P])` input and output arguments.  There is nothing to
+  indicate these treat any dimension as special.   Adequately
+  transpose-invariant (`./flow_3d_axes.ipynb`).  See summary in `ai_output/gemini_flow_invariance.md`.
+
+  Plan:
+
+  Replace `(M, N[, P])` with `(I, J[, K])` throughout.
+
+* `denoise_wavelet` in `restoration/_denoise.py` has the following
+  docstring:
+
+  ```rest
+  Perform wavelet denoising on an image.
+
+  Parameters
+  ----------
+  image : ndarray (M[, N[, ...P]][, C]) of ints, uints or floats
+      Input data to be denoised. `image` can be of any numeric type,
+      but it is cast into an ndarray of floats for the computation
+      of the denoised image.
+  ...
+  ```
+
+  As for `watershed`, one can specify the `channel_axis`.
+  `denoise_3d_axes.ipynb` shows that this denoising is transpose invariant, at
+  least to fairly small tolerance.
+
+  Plan:
+
+  Rewrite docstring to:
+
+  ```rest
+  Perform wavelet denoising on an image.
+
+  Parameters
+  ----------
+  image : array of 2, 3 or 4 dimensions of ints, uints or floats
+      Input image to be denoised. Can be a 2D or 3D image, in grayscale
+      (`image` has 2 or 3 dimensions) or multichannel (`image` has 3 or
+      4 dimensions).  For multichannel images, use the `channel_axis`
+      parameter to specify the channel axis. `image` can be of any numeric
+      type, but it is cast into an ndarray of floats for the computation of
+      the denoised image.
+  ...
+  ```
+
+* `restoration/deconvolution.py` :
+
+  ```rest
+  def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
+      """Richardson-Lucy deconvolution.
+
+      Parameters
+      ----------
+      image : ([P, ]M, N) ndarray
+         Input degraded image (can be n-dimensional). If you keep the
+         default `clip=True` parameter, you may want to normalize
+         the image so that its values fall in the [-1, 1] interval to avoid
+         information loss.
+      ...
+  ```
+
+  This ends up calling `scipy.signal.convolve` on the input array, so no
+  semantic meaning to the axes, and docstring better put as:
+
+  Plan:
+
+  ```rest
+      Parameters
+      ----------
+      image : N-D ndarray
+  ```
+
+* `denoise_nl_means` in `restoration/non_local_means.py`.  Docstring
+  is:
+
+  ```rest
+  image : 2D or 3D ndarray
+      Input image to be denoised, which can be 2D or 3D, and grayscale
+      or RGB (for 2D images only, see ``channel_axis`` parameter). There can
+      be any number of channels (does not strictly have to be RGB).
+
+  ...
+
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  In fact, it seems that the routine will handle 3 or 4D images with a color
+  channel (up to 5 dimensional array).
+
+  `nl_means_3d_axes.ipynb` shows that the routine is transpose invariant;
+  therefore there is no special meaning that needs to be attached to a "plane"
+  axis.
+
+  There are various uses of the term "plane" in `restoration/_nl_means_denoising.pyx`.  Plane seems to always mean "slice along first axis".
+
+  Plan:
+
+  Rewrite docstring as:
+
+  ```rest
+  image : array of 2 to 5 dimensions
+      Input image. Can be a 2D, 3D or 4D image, in grayscale (`image` has 2,
+      3 or 4 dimensions) or multichannel (`image` has 3, 4 or 5 dimensions).
+      For multichannel images, use the `channel_axis` parameter to specify the
+      channel axis.  There can be any number of channels (does not strictly have to be RGB).
+  ...
+  ```
+
+  Replace uses of plane, row, column in Cython code with i, j, k.
+
+* `segmentation/boundaries.py::mark_boundaries`:
+
+  Routine marks boundaries in color, thus promoting a input grayscale
+  image to color.
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray of shape (M, N[, 3])
+      Grayscale or RGB image.
+  label_img : ndarray of shape (M, N) and dtype int
+      Label array where regions are marked by different integer values.
+  ...
+
+  Returns
+  -------
+  marked : ndarray of shape (M, N, 3) and dtype float
+      An image in which the boundaries between labels are
+      superimposed on the original image.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 2D or 3D ndarray, optional color channel e.g (I, J), (I, J, C)
+      Grayscale or RGB image.   Indicate axis containing color channel
+      with `channel_axis`.
+  label_img : ndarray of shape (M, N) and dtype int
+      Label array where regions are marked by different integer values.
+  ...
+  channel_axis : int or None, optional
+      This parameter indicates which axis of the `image` array corresponds to
+      color channels.  Ignored if `image` is 2D.
+
+  Returns
+  -------
+  marked : 3D ndarray, eg shape (I, J, 3) and dtype float
+      An image in which the boundaries between labels are superimposed
+      on the original image.  If the input was grayscale (2D), output
+      is color (3D), with channel axis last.  If input was color (3D) then output has same shape as input, with color channel indicated by the input `channel_axis` argument.
+  ```
+
+  Add `last_channel_axis` decorator, and rearrange axes of output image accordingly.
+
 * `segmentation/_chan_vese.py`: all instances of `(M, N)` can be
   replaced with `(I, J)`.
 
@@ -1420,22 +1289,197 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       to channels.
   ```
 
-* `segmentation/thresholding.py`: all instances of `(M, N)` can be
-  replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
-  `(I, J[, ...])`.
+* `segmentation/_watershed.py` `watershed` function:
 
-* `transform/_geometric.py`: — replace `(M, N)` with and `(I, J)` throughout.
+  ```rest
+  def watershed(
+      image,
+      markers=None,
+      connectivity=1,
+      offset=None,
+      mask=None,
+      compactness=0,
+      watershed_line=False,
+  ):
+    """Find watershed basins in an image flooded from given markers.
 
-* `transform/_warps_cy.pyx`: — replace `(M, N)` with and `(I, J)`.
+    Parameters
+    ----------
+    image : (M, N[, ...]) ndarray
+        Data array where the lowest value points are labeled first.
+    markers : int, or (M, N[, ...]) ndarray of int, optional
+        The desired number of basins, or an array marking the basins with the
+        values to be assigned in the label matrix. Zero means not a marker. If
+        None, the (default) markers are determined as the local minima of
+        `image`. Specifically, the computation is equivalent to applying
+        :func:`skimage.morphology.local_minima` onto `image`, followed by
+        :func:`skimage.measure.label` onto the result (with the same given
+        `connectivity`). Generally speaking, users are encouraged to pass
+        markers explicitly.
+    connectivity : int or ndarray, optional
+        The neighborhood connectivity. An integer is interpreted as in
+        ``scipy.ndimage.generate_binary_structure``, as the maximum number
+        of orthogonal steps to reach a neighbor. An array is directly
+        interpreted as a footprint (structuring element). Default value is 1.
+        In 2D, 1 gives a 4-neighborhood while 2 gives an 8-neighborhood.
+    offset : array_like of shape image.ndim, optional
+        The coordinates of the center of the footprint.
+    mask : (M, N[, ...]) ndarray of bools or 0's and 1's, optional
+        Array of same shape as `image`. Only points at which mask == True
+        will be labeled.
+    compactness : float, optional
+        Use compact watershed [1]_ with given compactness parameter.
+        Higher values result in more regularly-shaped watershed basins.
+    watershed_line : bool, optional
+        If True, a one-pixel wide line separates the regions
+        obtained by the watershed algorithm. The line has the label 0.
+        Note that the method used for adding this line expects that
+        marker regions are not adjacent; the watershed line may not catch
+        borders between adjacent marker regions.
 
-* `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
-  refer to `(M, N,[ P])` input and output arguments.  There is nothing to
-  indicate these treat any dimension as special.   Adequately
-  transpose-invariant (`./flow_3d_axes.ipynb`).  See summary in `ai_output/gemini_flow_invariance.md`.
+    Returns
+    -------
+    out : ndarray
+        A labeled matrix of the same type and shape as `markers`.
+  ```
+
+  This looks like a generic N-D function.  However, tests of the type in
+  `watershed_3d_axes.ipynb` show that the function is not transpose invariant,
+  in the presence of tied values in the image.  This is expected, because, in
+  the presence of ties, ties identified first in the neighborhood get
+  processed first, and the axis ordering dictates the ordering of neighbors.
+  However, if I make the image values unique, the routine is transpose
+  invariant (see the notebook).
 
   Plan:
 
-  Replace `(M, N[, P])` with `(I, J[, K])` throughout.
+  Change `(M, N[, ...])` to `(I, J[, ...])`.  Consider adding note about ties
+  and axis ordering in the code comments — it's probably too niche to put into
+  the docstring.
+
+* `segmentation/slic_superpixels.py`: `slic` function.  Docstring:
+
+  ```rest
+  Segments image using k-means clustering in Color-(x,y,z) space.
+
+  Parameters
+  ----------
+  image : (M, N[, P][, C]) ndarray
+      Input image. Can be 2D or 3D, and grayscale or multichannel
+      (see `channel_axis` parameter).
+      Input image must either be NaN-free or the NaN's must be masked out.
+  ...
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  Related, we have this in the called `segmentation/_slic.pyx:_slic_cython` docstring:
+
+  ```rest
+  Helper function for SLIC segmentation.
+
+  Parameters
+  ----------
+  image_zyx : 4D array of np_floats, shape (Z, Y, X, C)
+      The input image.
+  mask : 3D array of bool, shape (Z, Y, X), optional
+      The input mask.
+  segments : 2D array of np_floats, shape (N, 3 + C)
+      The initial centroids obtained by SLIC as [Z, Y, X, C...].
+
+  ...
+
+  Returns
+  -------
+  nearest_segments : 3D array of int, shape (Z, Y, X)
+      The label field/superpixels found by SLIC.
+
+  Notes
+  -----
+  The image is considered to be in (z, y, x) order, which can be
+  surprising. More commonly, the order (x, y, z) is used. However,
+  in 3D image analysis, 'z' is usually the "special" dimension, with,
+  for example, a different effective resolution than the other two
+  axes. Therefore, x and y are often processed together, or viewed as
+  a cut-plane through the volume. So, if the order was (x, y, z) and
+  we wanted to look at the 5th cut plane, we would write::
+
+      my_z_plane = img3d[:, :, 5]
+
+  but, assuming a C-contiguous array, this would grab a discontiguous
+  slice of memory, which is bad for performance. In contrast, if we
+  see the image as (z, y, x) ordered, we would do::
+
+      my_z_plane = img3d[5]
+
+  and get back a contiguous block of memory. This is better both for
+  performance and for readability.
+  ```
+
+  Testing finds that `slic` is transpose invariant for the `cell3d` images,
+  but not for the `brain` image.  Gemini asserts that this is due to ties in
+  the k-means algorithm leading to slightly different regions within
+  background — see `ai_outputs/slic_transpose_invariance.md`.  Indeed the
+  notebook `slic_3d_axes.ipynb` confirms invariance for a version of the brain
+  image without ties.  [JNI asserted invariance on
+  Zulip](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/576963786).
+
+  Note that the channel axis can be any axis, but the `channel_as_last_axis`
+  decorator will transpose the channel axis to be the final axis before
+  delegating to the function, and retranspose on output.
+
+  Plan:
+
+  Rewrite `slic`: docstring from the above, to:
+
+  ```rest
+  Parameters
+  ----------
+  image : array of 2, 3 or 4 dimensions
+      Input image. Can be a 2D or 3D image, in grayscale (`image` has 2 or 3 dimensions) or multichannel (`image` has 3 or 4 dimensions).  For multichannel images, use the `channel_axis` parameter to specify the channel axis. Input image must either be NaN-free or the
+      NaNs must be masked out.
+  ...
+  ```
+
+  Rewrite `_slic_cython` docstring from the above, to:
+
+  ```rest
+  Helper function for SLIC segmentation.
+
+  Parameters
+  ----------
+  image_ijkc : 4D array of np_floats, shape (I, J, K, C)
+      The input image.
+  mask : 3D array of bool, shape (I, J, K), optional
+      The input mask.
+  segments : 2D array of np_floats, shape (N, 3 + C)
+      The initial centroids obtained by SLIC as [I, J, K, C...].
+
+  ...
+
+  Returns
+  -------
+  nearest_segments : 3D array of int, shape (I, J, K)
+      The label field/superpixels found by SLIC.
+
+  Notes
+  -----
+  The performance of this routine may depend on the memory ordering of the
+  `image_ijkc`.   This routine was designed with the assumption that the array
+  is C-contiguous, so that the last axis is the fastest-changing in memory,
+  and the first axis is the slowest-changing in memory.  As for standard
+  routines operating on Numpy arrays, this function will work with any memory
+  ordering, but it may well be slower for memory orderings other than
+  C-contiguous. Please benchmark your code if peformance of this routine is
+  important to you.  Please also consider letting us know your results via our
+  Github issues, so we have data with which to optimize this routine.
+  ```
+
+* `segmentation/thresholding.py`: all instances of `(M, N)` can be
+  replaced with `(I, J)`.  All instances of `(M, N[, ...])` can be replaced by
+  `(I, J[, ...])`.
 
 * `segmentation/active_contour_model.py::active_contour`:
 
@@ -1981,6 +2025,8 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
   at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
 
+* `transform/_geometric.py`: — replace `(M, N)` with and `(I, J)` throughout.
+
 * `transform/radon_transform.py`: `iradon_sart`.  Replace (M, N) with (I, J),
   and edit rest of docstring to match.
 
@@ -2193,6 +2239,8 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   >>> # The Skimage 1 and 2 code are equivalent.
   >>> assert np.all(r_img_1 == r_img_2)
   ```
+
+* `transform/_warps_cy.pyx`: — replace `(M, N)` with and `(I, J)`.
 
 ## Documentation
 
