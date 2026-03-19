@@ -857,6 +857,147 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   module.
 
 * `feature/corner.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `feature/_daisy.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `feature/_daisy.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `feature/haar.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `feature/_haar.pyx`: — replace `(M, N)` with and `(I, J)` throughout.
+* `feature/_hog.py::hog`:
+
+  ```rest
+  image : (M, N[, C]) ndarray
+      Input image.
+  ...
+  channel_axis : int or None, optional
+      If None, the image is assumed to be a grayscale (single channel) image.
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 2D or 3D ndarray, optional color axis, e.g. shape (I, J), (I, J, 3)
+      Input image, 2D grayscale or 2D RGB.  If RGB, specify color channel axis explicitly with `channel_axis`.
+  ...
+  channel_axis : int or None, optional
+      If ``None``, the image is assumed to be grayscale (single-channel).
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  Also see `denoise_bilateral`.
+
+  And replace `(M, N)` with and `(I, J)` elsewhere.
+
+* `feature/peak.py`: `_prominent_peaks`.  Docstring:
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N) ndarray
+      Input image.
+  min_xdistance : int
+      Minimum distance separating features in the x dimension.
+  min_ydistance : int
+      Minimum distance separating features in the y dimension.
+  threshold : float
+      Minimum intensity of peaks. Default is `0.5 * max(image)`.
+  num_peaks : int
+      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
+      return `num_peaks` coordinates based on peak intensity.
+
+  Returns
+  -------
+  intensity, xcoords, ycoords : tuple of array
+      Peak intensity values, x and y indices.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : (I, J) ndarray
+      Input image.
+  min_distance : int or sequence
+      Minimum distance separating features in each dimension. Can be scalar,
+      in which case corresponds to ``(m, m)`` (where ``m`` is the value of
+      `min_distance`).
+  threshold : float
+      Minimum intensity of peaks. Default is `0.5 * max(image)`.
+  num_peaks : int
+      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
+      return `num_peaks` coordinates based on peak intensity.
+
+  Returns
+  -------
+  intensity, i_coords, j_coords : tuple of array
+      Peak intensity values, i and j indices.
+  ```
+
+  Docstring for Skimage1:
+
+  ```rest
+  There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
+
+  The first is that Skimage2 returns image coordinates in reversed order to that in Skimage1.  `Skimage2` returns the `intensity`, followed by the *column* coordinates in the array (`x_coords`) followed by the *row* cooordinates (`y_coords`).   In contrast, Skimage2 returns the intensity, followed by the *row* (first / 'i' axis) coordinates, followed by the *column* coordinates (second / 'j' axis).  This is for consistency with other Skimage2 routines.
+
+  The second is that Skimage2 specifes minimum distances with `min_distance`
+  keyword argument, instead of `min_distanc_x` and `min_distance_y` arguments.
+  `min_distance` can be scalar (in which case the argument applies to both
+  axes of the image), or it should be a sequence of length 2. If
+  `min_distance` is a sequence, specify shift in `i, j` order.
+
+  When porting Skimage1 code to Skimage 2, the following are equivalent:
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> # Skimage1
+  >>> intensity, col_coords, row_coords = ski1.feature._prominent_peaks(
+  ...     img, min_distance_x=1, min_distance_y=2)
+  >>> # Skimage2.  Note reversal of second and third return arguments,
+  >>> # and min_distance specified in row, column (i, j) order.
+  >>> intensity, row_coords, col_coords = ski2.feature._prominent_peaks(
+  ...     img, min_distance=(2, 1)
+
+  ```
+
+  Having said that, searching Github, I could find [maybe one
+  attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
+  at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
+
+* `feature/template.py::match_template`:
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N[, P]) array
+      2-D or 3-D input image.
+  template : (m, n[, p]) array
+      Template to locate. It must be `(m <= M, n <= N[, p <= P])`.
+  ```
+
+  See `./ai_output/gemini_match_template_invariance.md` and
+  `match_template_3d_axes.ipynb`.   Function appears to be, and can be shown
+  to be, transpose invariant.  There is no special treatment of particular
+  axes.
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : (I, J[, J]) array
+      2-D or 3-D input image.
+  template : (Q, R[, S]) array
+      Template to locate. It must be `(Q <= I, R <= J[, S <= K])`.
+  ```
+
+* `feature/texture.py:    image : (M, N) array`
+* `feature/texture.py:    output : (M, N) array`
 
 * `rag_mean_color` in `graph/_rag.py`.  Docstring:
 
@@ -1978,84 +2119,6 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
 
   Suggest retaining this option in Skimage2, leaving with default `rc`
   behavior.  Perhaps we could deprecate at some later stage.
-
-* `feature/peak.py`: `_prominent_peaks`.  Docstring:
-
-  ```rest
-  Parameters
-  ----------
-  image : (M, N) ndarray
-      Input image.
-  min_xdistance : int
-      Minimum distance separating features in the x dimension.
-  min_ydistance : int
-      Minimum distance separating features in the y dimension.
-  threshold : float
-      Minimum intensity of peaks. Default is `0.5 * max(image)`.
-  num_peaks : int
-      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
-      return `num_peaks` coordinates based on peak intensity.
-
-  Returns
-  -------
-  intensity, xcoords, ycoords : tuple of array
-      Peak intensity values, x and y indices.
-  ```
-
-  Plan:
-
-  ```rest
-  Parameters
-  ----------
-  image : (I, J) ndarray
-      Input image.
-  min_distance : int or sequence
-      Minimum distance separating features in each dimension. Can be scalar,
-      in which case corresponds to ``(m, m)`` (where ``m`` is the value of
-      `min_distance`).
-  threshold : float
-      Minimum intensity of peaks. Default is `0.5 * max(image)`.
-  num_peaks : int
-      Maximum number of peaks. When the number of peaks exceeds `num_peaks`,
-      return `num_peaks` coordinates based on peak intensity.
-
-  Returns
-  -------
-  intensity, i_coords, j_coords : tuple of array
-      Peak intensity values, i and j indices.
-  ```
-
-  Docstring for Skimage1:
-
-  ```rest
-  There are two key differences between this routine (in Skimage1) and the equivalent routine in Skimage2.
-
-  The first is that Skimage2 returns image coordinates in reversed order to that in Skimage1.  `Skimage2` returns the `intensity`, followed by the *column* coordinates in the array (`x_coords`) followed by the *row* cooordinates (`y_coords`).   In contrast, Skimage2 returns the intensity, followed by the *row* (first / 'i' axis) coordinates, followed by the *column* coordinates (second / 'j' axis).  This is for consistency with other Skimage2 routines.
-
-  The second is that Skimage2 specifes minimum distances with `min_distance`
-  keyword argument, instead of `min_distanc_x` and `min_distance_y` arguments.
-  `min_distance` can be scalar (in which case the argument applies to both
-  axes of the image), or it should be a sequence of length 2. If
-  `min_distance` is a sequence, specify shift in `i, j` order.
-
-  When porting Skimage1 code to Skimage 2, the following are equivalent:
-
-  >>> import skimage as ski1
-  >>> import skimage2 as ski2
-  >>>
-  >>> # Skimage1
-  >>> intensity, col_coords, row_coords = ski1.feature._prominent_peaks(
-  ...     img, min_distance_x=1, min_distance_y=2)
-  >>> # Skimage2.  Note reversal of second and third return arguments,
-  >>> # and min_distance specified in row, column (i, j) order.
-  >>> intensity, row_coords, col_coords = ski2.feature._prominent_peaks(
-  ...     img, min_distance=(2, 1)
-
-  ```
-
-  Having said that, searching Github, I could find [maybe one
-  attempt](https://github.com/Danieloni1/nlp-final-project/blob/369b3d789e3a0915b46de0b61b3d5166a148c398/data/raw_data/python/hough_transform.py#L62)
-  at importing and using the Skimage `_prominent_peaks` routine, and that likely broken.
 
 * `transform/_geometric.py`: — replace `(M, N)` with and `(I, J)` throughout.
 
