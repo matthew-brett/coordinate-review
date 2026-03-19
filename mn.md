@@ -14,20 +14,6 @@ For every checked instance recorded here, assume that `M, N ...` can be safely r
 
 ## Not yet checked
 
-* `feature/_daisy.py:    descs_img : ndarray of shape (M, N, 3), only if visualize=True`
-* `feature/_daisy.py:    image : (M, N) array`
-* `feature/_haar.pyx:    int_image : (M, N) ndarray`
-* `feature/_hog.py:    channel : ndarray of shape (M, N)`
-* `feature/_hog.py:    hog_image : (M, N) ndarray, optional`
-* `feature/_hog.py:    image : (M, N[, C]) ndarray`
-* `feature/haar.py:    features : ndarray of shape (M, N)`
-* `feature/haar.py:    image : ndarray of shape (M, N)`
-* `feature/haar.py:    int_image : ndarray of shape (M, N)`
-* `feature/peak.py:    image : (M, N) ndarray`
-* `feature/template.py:        is an array with shape `(M - m + 1, N - n + 1)` for an `(M, N)` image`
-* `feature/template.py:    image : (M, N[, P]) array`
-* `feature/texture.py:    image : (M, N) array`
-* `feature/texture.py:    output : (M, N) array`
 * `measure/_find_contours.py:    image : ndarray of shape (M, N) and dtype float`
 * `measure/_find_contours.py:    mask : ndarray of shape (M, N) and dtype bool`
 * `measure/_marching_cubes_lewiner.py:        indexing dimensions (M, N, P) as in `volume`.`

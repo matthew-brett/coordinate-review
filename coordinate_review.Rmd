@@ -996,8 +996,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       Template to locate. It must be `(Q <= I, R <= J[, S <= K])`.
   ```
 
-* `feature/texture.py:    image : (M, N) array`
-* `feature/texture.py:    output : (M, N) array`
+* `feature/texture.py`: — replace `(M, N)` with and `(I, J)` throughout.
 
 * `rag_mean_color` in `graph/_rag.py`.  Docstring:
 
@@ -1158,6 +1157,43 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Replace `(M, N[, ...])` with `(I, J[, ...])`, `(M, N,[ P])` with `(I, J[,
   K])`
 
+* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
+  throughout.
+* `measure/_find_contours.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `measure/_marching_cubes_lewiner.py::marching_cubes`:
+
+  This routine does not appear to be transpose invariant.  See `./ai_output/gemini_marching_cubes_invariance.md` and `marching_cubes_3d_axes.ipynb` (also via Gemini).  The lack of invariance seems to be an order effect of the axes, and not special-casing of a particular (e.g. plane) axis.
+
+  See [Zulip request for
+  information](https://skimage.zulipchat.com/#narrow/channel/181448-development/topic/Coordinate.20review.20for.20skimage2/near/580425795)
+
+  Replace `(M, N, P)` with and `(I, J, K)` throughout.
+
+* `measure/_pnpoly.pyx`: — replace `(M, N)` with and `(I, J)` throughout.
+  Rename `M` and `N` variables to `I` and `J`.
+* `measure/_regionprops.py:    intensity_image : (M, N[, P][, C]) ndarray, optional`
+* `measure/_regionprops.py:    intensity_image : (M, N[, P][, C]) ndarray, optional`
+* `measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
+* `measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
+* `measure/_regionprops_utils.py:    image : (M, N[, P]) ndarray`
+* `measure/_regionprops_utils.py:    image : ndarray of shape (M, N)`
+* `measure/_regionprops_utils.py:    image : ndarray of shape (M, N)`
+* `measure/entropy.py:    image : ndarray of shape (M, N)`
+* `measure/pnpoly.py:    mask : ndarray of shape (M, N)`
+* `measure/pnpoly.py:    shape : tuple (M, N)`
+* `measure/profile.py:    image : ndarray, shape (M, N[, C])`
+
+
+* `morphology/_skeletonize.py:    image : (M, N[, P]) ndarray of bool or int`
+* `morphology/_skeletonize.py:    image : binary (M, N) ndarray`
+* `morphology/_skeletonize.py:    image : binary ndarray, shape (M, N)`
+* `morphology/_skeletonize.py:    mask : binary ndarray, shape (M, N), optional`
+* `morphology/_skeletonize.py:    skeleton : (M, N[, P]) ndarray of bool`
+* `morphology/convex_hull.py:    gridcoords : ndarray of shape (M, N)`
+* `morphology/convex_hull.py:    hull : (M, N) array of bool`
+* `morphology/convex_hull.py:    hull_equations : ndarray of shape (M, N)`
+* `morphology/convex_hull.py:    image : ndarray of shape (M, N)`
+
 * `io/_io.py`: `imsave`. Docstring:
 
   ```rest
@@ -1203,9 +1239,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
   (and following).
 
-* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
-  throughout.
-
 * `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
   refer to `(M, N,[ P])` input and output arguments.  There is nothing to
   indicate these treat any dimension as special.   Adequately
@@ -1214,6 +1247,11 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   Plan:
 
   Replace `(M, N[, P])` with `(I, J[, K])` throughout.
+
+**Check**
+
+* `restoration/deconvolution.py:    image : ndarray of shape (M, N)`
+* `restoration/deconvolution.py:    x_postmean : ndarray of shape (M, N)`
 
 * `denoise_bilateral` in `restoration/_denoise.py` has the following:
 
@@ -1730,17 +1768,44 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
 * `segmentation/_felzenszalb_cy.pyx` - replace `(M, N, C)` and `(M, N)` with
   `(I, J, C)` and `(I, J)` throughout.
-* See the "Not checked" section in `mn.md` for instances as above I have not
-  checked yet.
+
+* `util/compare.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `util/unique.py::unique_rows`:
+
+  ```rest
+  Parameters
+  ----------
+  ar : ndarray, shape (M, N)
+      The input array.
+
+  Returns
+  -------
+  ar_out : ndarray, shape (P, N)
+      A copy of the input array with repeated rows removed.
+
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  ar : ndarray, shape (I, J)
+      The input array.
+
+  Returns
+  -------
+  ar_out : ndarray, shape (Q, J)
+      A copy of the input array with repeated rows removed.
+
+  ```
+
 * See the "Checked" section in `plane.md` for other instances (via `grep`) of
   "plane" in the codebase, where reference does _not_ refer to semantic
   labeling of plane in array.
 * See the "Checked" section in `mn.md` for other instances (via `grep`) of
   "M, N" in the codebase, where reference does _not_ refer to semantic labeling
-  of plane in array.
-
-Also see output of `rg "\(M\s*,\s*N"` on codebase in `mn.md`.  There are
-multiple instances of `M, N[, P]` etc.
+  of plane in array.  `mn.md` started as the output of `rg "\(M\s*,\s*N"` on codebase.
 
 ## x and y in variables and docstrings
 
@@ -2038,7 +2103,6 @@ See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
 Note multiple instances in both files of of `(M, N)`, replace with `(I, J)`.
 
 Output specification for `H` in `hough_circle`: edit for M, N etc.
-
 
 #### Draw module
 
