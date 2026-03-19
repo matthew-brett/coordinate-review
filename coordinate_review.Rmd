@@ -1074,6 +1074,38 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   Replace `(M, N[, P])` with `(I, J[, K])` throughout.
 
+* `denoise_bilateral` in `restoration/_denoise.py` has the following:
+
+  ```rest
+  Parameters
+  ----------
+  image : ndarray, shape (M, N[, 3])
+      Input image, 2D grayscale or RGB.
+  ...
+  channel_axis : int or None, optional
+      If ``None``, the image is assumed to be grayscale (single-channel).
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
+  [Discussion on
+  Zulip](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Channel.20axis/near/580405236)
+  on desirability of having specify `channel_axis` for 2D color images.
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : 2D or 3D ndarray, optional color axis, e.g. shape (I, J), (I, J, 3)
+      Input image, 2D grayscale or 2D RGB.  If RGB, specify color channel axis explicitly with `channel_axis`.
+  ...
+  channel_axis : int or None, optional
+      If ``None``, the image is assumed to be grayscale (single-channel).
+      Otherwise, this parameter indicates which axis of the array corresponds
+      to channels.
+  ```
+
 * `denoise_wavelet` in `restoration/_denoise.py` has the following
   docstring:
 
@@ -2252,3 +2284,8 @@ x, y, z. See :ref:`Coordinate conventions
 
 And edit that document (`doc/source/user_guide/numpy_images.rst`) for plane
 conventions etc.
+
+And change `When documenting array parameters, use ``image : ndarray of shape
+(M, N)`` and then refer to ``M`` and ``N`` in the docstring, if necessary.` to
+`When documenting array parameters, use ``image : ndarray of shape (I, J)``
+and then refer to ``I`` and ``J`` in the docstring, if necessary.
