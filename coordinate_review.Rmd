@@ -2246,9 +2246,24 @@ See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
       Where ``(yc, xc)`` is the center, ``(a, b)`` the major and minor
       axes, respectively. The `orientation` value follows the
       `skimage.draw.ellipse_perimeter` convention.
+
+  ...
+
+  Examples
+  --------
+  >>> from skimage.transform import hough_ellipse
+  >>> from skimage.draw import ellipse_perimeter
+  >>> img = np.zeros((25, 25), dtype=np.uint8)
+  >>> rr, cc = ellipse_perimeter(10, 10, 6, 8)
+  >>> img[cc, rr] = 1
+  >>> result = hough_ellipse(img, threshold=8)
+  >>> result.tolist()
+  [(10, 10.0, 10.0, 8.0, 6.0, 0.0)]
   ```
 
-  should be:
+  Claude noted the inconsistency of application of `rr`, `cc` above.
+
+  Plan:
 
   ```rest
   Returns
@@ -2257,6 +2272,19 @@ See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
       Where ``(rc, cc)`` is the center, ``(a, b)`` the major and minor
       axes, respectively. The `orientation` value follows the
       `skimage.draw.ellipse_perimeter` convention, where positive values correspond to anti-clockwise rotation from the *i* axis (first image axis).
+
+  ...
+
+  Examples
+  --------
+  >>> from skimage.transform import hough_ellipse
+  >>> from skimage.draw import ellipse_perimeter
+  >>> img = np.zeros((25, 25), dtype=np.uint8)
+  >>> rr, cc = ellipse_perimeter(11, 14, 6, 8)
+  >>> img[rr, cc] = 1
+  >>> result = hough_ellipse(img, threshold=8)
+  >>> result.tolist()
+  [(10, 11.0, 14.0, 8.0, 6.0, 0)]
   ```
 
   with associated implementation.
@@ -2285,6 +2313,42 @@ See Gemini analysis in `ai_output/gemini_hough_analysis.md`.
   >>> # Skimage2 equivalent to Skimage1 code.
   >>> angle2 = np.pi / 2 - angle1  # Skimage2 equivalent angle.
   >>> rr2, cc2 = ski2.draw.ellipse_permeter(10, 10, 6, 8, orientation=angle2)
+  ```
+
+* `hough_line_peaks`: clarification in docstring:
+
+  ```rest
+  Examples
+  --------
+  >>> from skimage.transform import hough_line, hough_line_peaks
+  >>> from skimage.draw import line
+  >>> img = np.zeros((15, 15), dtype=bool)
+  >>> rr, cc = line(0, 0, 14, 14)
+  >>> img[rr, cc] = 1
+  >>> rr, cc = line(0, 14, 14, 0)
+  >>> img[cc, rr] = 1
+  >>> hspace, angles, dists = hough_line(img)
+  >>> hspace, angles, dists = hough_line_peaks(hspace, angles, dists)
+  >>> len(angles)
+  2
+  ```
+
+  Plan:
+
+  ```rest
+  Examples
+  --------
+  >>> from skimage.transform import hough_line, hough_line_peaks
+  >>> from skimage.draw import line
+  >>> img = np.zeros((15, 15), dtype=bool)
+  >>> rr, cc = line(0, 0, 14, 14)  # Diagonal top-left -> bottom-right.
+  >>> img[rr, cc] = 1
+  >>> rr, cc = line(0, 14, 14, 0)  # Bottom-left -> top-right.
+  >>> img[rr, cc] = 1
+  >>> hspace, angles, dists = hough_line(img)
+  >>> hspace, angles, dists = hough_line_peaks(hspace, angles, dists)
+  >>> len(angles)
+  2
   ```
 
 **Docstrings**
