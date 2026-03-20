@@ -336,6 +336,7 @@ is assumed to be the last.  We agreed on Zulip and meeting that we should always
 
 * `set_color` in `draw/draw.py` (`image : ndarray of shape (M, N,
   C)`)
+* `profile_line` and `show_rag` in `graph/_rag.py`.
 * `rag_mean_color` and `show_rag` in `graph/_rag.py`.
 * `quickshift` in `segmentation/_quickshift.py`
 * `active_contour` in `segmentation/active_contour_model.py`.
@@ -565,15 +566,61 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
 ### Plans and investigation by found 3D-capable routines
 
-* `measure/_ccomp.pyx:    # Handle first plane`.  This is in
-  `scan3D`, called from `label_cython` in the same file.  Here the input array
-  `input_` is first axis-reordered to order axes in ascending size, before
-  calling `scan3D`, and the array is then axis-reordered to match input.
-  `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
-  This implies that we can roll axes and run algorithm, then roll back to get
-  the same result.  Tested, provisionally confirmed in `label_3d_axes.ipynb`
-  — labels show 1 to 1 mapping when running label on rolled versions of binary
-  image.
+* `draw.draw3d` has `ellipsoid` with docstring:
+
+  ```rest
+  Parameters
+  ----------
+  a : float
+      Length of semi-axis along x-axis.
+  b : float
+      Length of semi-axis along y-axis.
+  c : float
+      Length of semi-axis along z-axis.
+  spacing : 3-tuple of floats
+      Grid spacing in three spatial dimensions.
+  levelset : bool
+      If True, returns the level set for this ellipsoid (signed level
+      set about zero, with positive denoting interior) as np.float64.
+      False returns a binarized version of said level set.
+
+  Returns
+  -------
+  ellipsoid : (M, N, P) array
+      Ellipsoid centered in a correctly sized array for given `spacing`.
+      Boolean dtype unless `levelset=True`, in which case a float array is
+      returned with the level set above 0.0 representing the ellipsoid.
+  ```
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  a : float
+      Length of semi-axis along i-axis.
+  b : float
+      Length of semi-axis along j-axis.
+  c : float
+      Length of semi-axis along k-axis.
+  spacing : 3-tuple of floats
+      Grid spacing in three image dimensions.
+  levelset : bool
+      If True, returns the level set for this ellipsoid (signed level
+      set about zero, with positive denoting interior) as np.float64.
+      False returns a binarized version of said level set.
+
+  Returns
+  -------
+  ellipsoid : (I, J, K) array
+      Ellipsoid centered in a correctly sized array for given `spacing`.
+      Boolean dtype unless `levelset=True`, in which case a float array is
+      returned with the level set above 0.0 representing the ellipsoid.
+  ```
+
+  Similarly for similar arguments in `ellipsoid_stats` function in same
+  module.
+
 * `draw/draw.py`: `rectangle`.  `start` input argument is:
 
   ```rest
@@ -801,61 +848,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 * `filters/morphsnakes.py`: — replace `(L, M, N)`, `(M, N)` with
   `(I, J, K)` and `(I, J)` throughout.
 
-* `draw.draw3d` has `ellipsoid` with docstring:
-
-  ```rest
-  Parameters
-  ----------
-  a : float
-      Length of semi-axis along x-axis.
-  b : float
-      Length of semi-axis along y-axis.
-  c : float
-      Length of semi-axis along z-axis.
-  spacing : 3-tuple of floats
-      Grid spacing in three spatial dimensions.
-  levelset : bool
-      If True, returns the level set for this ellipsoid (signed level
-      set about zero, with positive denoting interior) as np.float64.
-      False returns a binarized version of said level set.
-
-  Returns
-  -------
-  ellipsoid : (M, N, P) array
-      Ellipsoid centered in a correctly sized array for given `spacing`.
-      Boolean dtype unless `levelset=True`, in which case a float array is
-      returned with the level set above 0.0 representing the ellipsoid.
-  ```
-
-  Plan:
-
-  ```rest
-  Parameters
-  ----------
-  a : float
-      Length of semi-axis along i-axis.
-  b : float
-      Length of semi-axis along j-axis.
-  c : float
-      Length of semi-axis along k-axis.
-  spacing : 3-tuple of floats
-      Grid spacing in three image dimensions.
-  levelset : bool
-      If True, returns the level set for this ellipsoid (signed level
-      set about zero, with positive denoting interior) as np.float64.
-      False returns a binarized version of said level set.
-
-  Returns
-  -------
-  ellipsoid : (I, J, K) array
-      Ellipsoid centered in a correctly sized array for given `spacing`.
-      Boolean dtype unless `levelset=True`, in which case a float array is
-      returned with the level set above 0.0 representing the ellipsoid.
-  ```
-
-  Similarly for similar arguments in `ellipsoid_stats` function in same
-  module.
-
 * `feature/corner.py`: — replace `(M, N)` with and `(I, J)` throughout.
 * `feature/_daisy.py`: — replace `(M, N)` with and `(I, J)` throughout.
 * `feature/_daisy.py`: — replace `(M, N)` with and `(I, J)` throughout.
@@ -992,8 +984,8 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ----------
   image : (I, J[, J]) array
       2-D or 3-D input image.
-  template : (Q, R[, S]) array
-      Template to locate. It must be `(Q <= I, R <= J[, S <= K])`.
+  template : (U, V[, W]) array
+      Template to locate. It must be `(U <= I, V <= J[, W <= K])`.
   ```
 
 * `feature/texture.py`: — replace `(M, N)` with and `(I, J)` throughout.
@@ -1121,7 +1113,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ----------
   image : ndarray of shape (I, J) and dtype (uint8 or uint16)
       Input image.
-  footprint : ndarray of shape (A, B)
+  footprint : ndarray of shape (U, V)
       The neighborhood expressed as a 2-D array of 1's and 0's.
   out : ndarray of shape (I, J) and dtype int
       If None, a new array is allocated.
@@ -1156,43 +1148,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   Replace `(M, N[, ...])` with `(I, J[, ...])`, `(M, N,[ P])` with `(I, J[,
   K])`
-
-* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
-  throughout.
-* `measure/_find_contours.py`: — replace `(M, N)` with and `(I, J)` throughout.
-* `measure/_marching_cubes_lewiner.py::marching_cubes`:
-
-  This routine does not appear to be transpose invariant.  See `./ai_output/gemini_marching_cubes_invariance.md` and `marching_cubes_3d_axes.ipynb` (also via Gemini).  The lack of invariance seems to be an order effect of the axes, and not special-casing of a particular (e.g. plane) axis.
-
-  See [Zulip request for
-  information](https://skimage.zulipchat.com/#narrow/channel/181448-development/topic/Coordinate.20review.20for.20skimage2/near/580425795)
-
-  Replace `(M, N, P)` with and `(I, J, K)` throughout.
-
-* `measure/_pnpoly.pyx`: — replace `(M, N)` with and `(I, J)` throughout.
-  Rename `M` and `N` variables to `I` and `J`.
-* `measure/_regionprops.py:    intensity_image : (M, N[, P][, C]) ndarray, optional`
-* `measure/_regionprops.py:    intensity_image : (M, N[, P][, C]) ndarray, optional`
-* `measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
-* `measure/_regionprops.py:    label_image : (M, N[, P]) ndarray`
-* `measure/_regionprops_utils.py:    image : (M, N[, P]) ndarray`
-* `measure/_regionprops_utils.py:    image : ndarray of shape (M, N)`
-* `measure/_regionprops_utils.py:    image : ndarray of shape (M, N)`
-* `measure/entropy.py:    image : ndarray of shape (M, N)`
-* `measure/pnpoly.py:    mask : ndarray of shape (M, N)`
-* `measure/pnpoly.py:    shape : tuple (M, N)`
-* `measure/profile.py:    image : ndarray, shape (M, N[, C])`
-
-
-* `morphology/_skeletonize.py:    image : (M, N[, P]) ndarray of bool or int`
-* `morphology/_skeletonize.py:    image : binary (M, N) ndarray`
-* `morphology/_skeletonize.py:    image : binary ndarray, shape (M, N)`
-* `morphology/_skeletonize.py:    mask : binary ndarray, shape (M, N), optional`
-* `morphology/_skeletonize.py:    skeleton : (M, N[, P]) ndarray of bool`
-* `morphology/convex_hull.py:    gridcoords : ndarray of shape (M, N)`
-* `morphology/convex_hull.py:    hull : (M, N) array of bool`
-* `morphology/convex_hull.py:    hull_equations : ndarray of shape (M, N)`
-* `morphology/convex_hull.py:    image : ndarray of shape (M, N)`
 
 * `io/_io.py`: `imsave`. Docstring:
 
@@ -1239,19 +1194,217 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   discussion](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/577704973)
   (and following).
 
+* `measure/_colocalization.py`: — replace `(M, N)` with and `(I, J)`
+  throughout.
+
+* `measure/_ccomp.pyx:    # Handle first plane`.  This is in
+  `scan3D`, called from `label_cython` in the same file.  Here the input array
+  `input_` is first axis-reordered to order axes in ascending size, before
+  calling `scan3D`, and the array is then axis-reordered to match input.
+  `label_cython` gets called (named `clabel`) in `_label.py` `label` function.
+  This implies that we can roll axes and run algorithm, then roll back to get
+  the same result.  Tested, provisionally confirmed in `label_3d_axes.ipynb`
+  — labels show 1 to 1 mapping when running label on rolled versions of binary
+  image.
+
+* `measure/_find_contours.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `measure/_marching_cubes_lewiner.py::marching_cubes`:
+
+  This routine does not appear to be transpose invariant.  See `./ai_output/gemini_marching_cubes_invariance.md` and `marching_cubes_3d_axes.ipynb` (also via Gemini).  The lack of invariance seems to be an order effect of the axes, and not special-casing of a particular (e.g. plane) axis.
+
+  See [Zulip request for
+  information](https://skimage.zulipchat.com/#narrow/channel/181448-development/topic/Coordinate.20review.20for.20skimage2/near/580425795)
+
+  Replace `(M, N, P)` with and `(I, J, K)` throughout.
+
+* `measure/_pnpoly.pyx`: — replace `(M, N)` with and `(I, J)` throughout.
+  Rename `M` and `N` variables to `I` and `J`.
+* `measure/_regionprops.py::regionprops`:
+
+  ```rest
+  label_image : (M, N[, P]) ndarray
+      Label image. Labels with value 0 are ignored.
+  ...
+  intensity_image : (M, N[, P][, C]) ndarray, optional
+      Intensity (input) image of same shape as label image, plus
+      optionally an extra dimension for multichannel data. Currently,
+      this extra channel dimension, if present, must be the last axis.
+      Default is None.
+  ```
+
+  Gemini analysis in `ai_output/gemini_regionprops.md` and
+  `regionprops_3d_axes.ipynb` suggests this routine is transpose invariant;
+  there is no special treatment of a plane axis.
+
+  Plan:
+
+  ```rest
+  label_image : (I, J[, K]) ndarray
+      Label image. Labels with value 0 are ignored.
+  ...
+  intensity_image : (I, J[, K][, C]) ndarray, optional
+      Intensity (input) image of same shape as label image, plus
+      optionally an extra dimension for multichannel data.  Default is None.
+      Specify the color channel axis with `channel_axis`. We ignore
+      `channel_axis` if `intensity_image` has the same number of
+      dimensions as `label_image`.
+  ...
+  channel_axis : int or None, optional
+      This parameter indicates which axis of `intensity_image` corresponds to
+      channels.  Ignored if `label_image` has the same number of axes as `intensity_image`.
+  ```
+
+  Apply `last_channel_axis` to `intensity_image`, and test.
+
+* `measure/_regionprops.py::regionprops_table` - as for `regionprops` above.
+
+* `measure/_regionprops_utils.py::euler_number`:
+
+  ```rest
+  image : (M, N[, P]) ndarray
+      Input image. If image is not binary, all values greater than zero
+      are considered as the object.
+  ```
+
+  Plan:
+
+  ```rest
+  image : (I, J[, K]) ndarray
+      Input image. If image is not binary, all values greater than zero
+      are considered as the object.
+  ```
+
+  Also: replace `(M, N)` with and `(I, J)` throughout.
+
+* `measure/entropy.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `measure/pnpoly.py`: — replace `(M, N)` with and `(I, J)` throughout.
+* `measure/profile.py::profile_line`:
+
+  ```rest
+  image : ndarray, shape (M, N[, C])
+      The image, either grayscale (2D array) or multichannel
+      (3D array, where the final axis contains the channel
+      information).
+  src : array_like, shape (2,)
+      The coordinates of the start point of the scan line.
+  dst : array_like, shape (2,)
+      The coordinates of the end point of the scan
+      line. The destination point is *included* in the profile, in
+      contrast to standard numpy indexing.
+  ```
+
+  `src` and `dst` are in `ij` form; see docstring example and `./line_profile_args.ipynb`.
+
+  Plan:
+
+  ```rest
+  image : 2- or 3-D array, optional channel axis, shape e.g. (I, J), (I, J, C)
+      The image, either grayscale (2D array) or multichannel (3D array).  See `channel_axis` to specify
+      information).
+  start : array_like, shape (2,)
+      The coordinates of the start point of the scan line.  These are row, column (i, j) indices into `image`.
+  end : array_like, shape (2,)
+      The coordinates of the end point of the scan line (row, column / i, j).
+      The destination point is *included* in the profile, in contrast to
+      standard Numpy indexing.
+  ...
+  channel_axis : int or None, optional
+      This parameter indicates which axis of the `image` array corresponds to
+      channels.  Ignored if `image` is 2D.
+  ```
+
+  Add `last_channel_axis` with default of -1.
+
+* `morphology/_skeletonize.py::skeletonize`:
+
+  ```rest
+  Parameters
+  ----------
+  image : (M, N[, P]) ndarray of bool or int
+      The image containing the objects to be skeletonized. Each connected component
+      in the image is reduced to a single-pixel wide skeleton. The image is binarized
+      prior to thinning; thus, adjacent objects of different intensities are
+      considered as one. Zero or ``False`` values represent the background, nonzero
+      or ``True`` values -- foreground.
+
+  ...
+
+  Returns
+  -------
+  skeleton : (M, N[, P]) ndarray of bool
+      The thinned image.
+  ```
+
+  The function is not transpose invariant, but this does not seem to be due to
+  special treatment of particular axes.  See
+  `./ai_output/gemini_skeletonize_invariance.md`.  [Asked on
+  Zulip](https://skimage.zulipchat.com/#narrow/channel/181448-development/topic/Coordinate.20review.20for.20skimage2/near/580701060).
+
+  Plan:
+
+  ```rest
+  Parameters
+  ----------
+  image : (I, J[, K]) ndarray of bool or int
+      The image containing the objects to be skeletonized. Each connected component
+      in the image is reduced to a single-pixel wide skeleton. The image is binarized
+      prior to thinning; thus, adjacent objects of different intensities are
+      considered as one. Zero or ``False`` values represent the background, nonzero
+      or ``True`` values -- foreground.
+
+  ...
+
+  Returns
+  -------
+  skeleton : (I, J[, J]) ndarray of bool
+      The thinned image.
+  ```
+
+  and replace `(M, N)` with and `(I, J)` throughout.
+
+* `morphology/convex_hull.py`: — replace `(M, N)` with and `(I, J)`
+  throughout.
+
 * `registration/_optical_flow.py::optical_flow_tvl1` and `optical_flow_ilk`
   refer to `(M, N,[ P])` input and output arguments.  There is nothing to
   indicate these treat any dimension as special.   Adequately
-  transpose-invariant (`./flow_3d_axes.ipynb`).  See summary in `ai_output/gemini_flow_invariance.md`.
+  transpose-invariant (`./flow_3d_axes.ipynb`).  See summary in
+  `ai_output/gemini_flow_invariance.md`.  [JNI
+  agrees](https://skimage.zulipchat.com/#narrow/channel/383139-core-devs/topic/Coordinate.20review/near/580592594).
 
   Plan:
 
   Replace `(M, N[, P])` with `(I, J[, K])` throughout.
 
-**Check**
+* `restoration/deconvolution.py::richardson_lucy` :
 
-* `restoration/deconvolution.py:    image : ndarray of shape (M, N)`
-* `restoration/deconvolution.py:    x_postmean : ndarray of shape (M, N)`
+  ```rest
+  def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
+      """Richardson-Lucy deconvolution.
+
+      Parameters
+      ----------
+      image : ([P, ]M, N) ndarray
+         Input degraded image (can be n-dimensional). If you keep the
+         default `clip=True` parameter, you may want to normalize
+         the image so that its values fall in the [-1, 1] interval to avoid
+         information loss.
+      ...
+  ```
+
+  This ends up calling `scipy.signal.convolve` on the input array, so no
+  semantic meaning to the axes, and docstring better put as:
+
+  Plan:
+
+  ```rest
+      Parameters
+      ----------
+      image : N-D ndarray
+  ```
+
+* `restoration/deconvolution.py` : otherwise — replace `(M, N)` with and `(I,
+  J)` throughout.
 
 * `denoise_bilateral` in `restoration/_denoise.py` has the following:
 
@@ -1321,33 +1474,6 @@ If that is not true, then the function may not be transpose invariant, and I'll 
       type, but it is cast into an ndarray of floats for the computation of
       the denoised image.
   ...
-  ```
-
-* `restoration/deconvolution.py` :
-
-  ```rest
-  def richardson_lucy(image, psf, num_iter=50, clip=True, filter_epsilon=None):
-      """Richardson-Lucy deconvolution.
-
-      Parameters
-      ----------
-      image : ([P, ]M, N) ndarray
-         Input degraded image (can be n-dimensional). If you keep the
-         default `clip=True` parameter, you may want to normalize
-         the image so that its values fall in the [-1, 1] interval to avoid
-         information loss.
-      ...
-  ```
-
-  This ends up calling `scipy.signal.convolve` on the input array, so no
-  semantic meaning to the axes, and docstring better put as:
-
-  Plan:
-
-  ```rest
-      Parameters
-      ----------
-      image : N-D ndarray
   ```
 
 * `denoise_nl_means` in `restoration/non_local_means.py`.  Docstring
@@ -1699,7 +1825,37 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   ----------
   image : ndarray of shape (M, N[, 3])
       Input image.
+
+  ...
+
+  Examples
+  --------
+  >>> from skimage.draw import circle_perimeter
+  >>> from skimage.filters import gaussian
+
+  Create and smooth image:
+
+  >>> img = np.zeros((100, 100))
+  >>> rr, cc = circle_perimeter(35, 45, 25)
+  >>> img[rr, cc] = 1
+  >>> img = gaussian(img, sigma=2, preserve_range=False)
+
+  Initialize spline:
+
+  >>> s = np.linspace(0, 2*np.pi, 100)
+  >>> init = 50 * np.array([np.sin(s), np.cos(s)]).T + 50
+
+  Fit spline to image:
+
+  >>> snake = active_contour(img, init, w_edge=0, w_line=1)  # doctest: +SKIP
+  >>> dist = np.sqrt((45-snake[:, 0])**2 + (35-snake[:, 1])**2)  # doctest: +SKIP
+  >>> int(np.mean(dist))  # doctest: +SKIP
+  25
   ```
+
+  Gemini (`./ai_output/gemini_summary_xy.md`) spotted that the doctest above
+  mixes up row and column distance.  See `./active_contour_doctest_bug.ipynb`
+  and fix below.
 
   Plan:
 
@@ -1713,6 +1869,39 @@ If that is not true, then the function may not be transpose invariant, and I'll 
   channel_axis : int or None, optional
       This parameter indicates which axis of the `image` array corresponds to
       color channels.  Ignored if `image` is 2D.
+
+  ...
+
+  Examples
+  --------
+  >>> from skimage.draw import circle_perimeter
+  >>> from skimage.filters import gaussian
+
+  Create and smooth image:
+
+  >>> img = np.zeros((100, 100))
+  >>> rr, cc = circle_perimeter(35, 45, 25)
+  >>> img[rr, cc] = 1
+  >>> img = gaussian(img, sigma=2, preserve_range=False)
+
+  Initialize spline:
+
+  >>> s = np.linspace(0, 2*np.pi, 100)
+  >>> init = 50 * np.array([np.sin(s), np.cos(s)]).T + 50
+
+  Fit spline to image:
+
+  First column of output `snake` is row (i) coordinate, second is column (j) coordinate.
+
+  >>> snake = active_contour(img, init, w_edge=0, w_line=1)  # doctest: +SKIP
+
+  Recall above that the circle center is at i=35, j=45, radius is 25.  Our
+  calculated snake should follow the original circle:
+
+  >>> dist = np.sqrt((35 - snake[:, 0]) ** 2 +
+                     (45 - snake[:, 1]) ** 2)  # doctest: +SKIP
+  >>> np.all(np.round(dist) == 25)
+  np.True_
   ```
 
   Add `last_channel_axis` decorator.
@@ -1795,7 +1984,7 @@ If that is not true, then the function may not be transpose invariant, and I'll 
 
   Returns
   -------
-  ar_out : ndarray, shape (Q, J)
+  ar_out : ndarray, shape (U, J)
       A copy of the input array with repeated rows removed.
 
   ```
@@ -2181,8 +2370,44 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   `NematicTL` repos by `viciya`; one is in a project repo
   `tiagopetena/computer_vision`.  These could be resolved by suitable PRs.  But `/hessian_matrix\(.*,.*["']xy["']/  AND NOT path:test_corner.py` occurs in 41 files, so that would be some work to resolve with PRs.  In neither case is the `order='xy'` case easy to pull out with a helper function.
 
-  Suggest retaining this option in Skimage2, leaving with default `rc`
-  behavior.  Perhaps we could deprecate at some later stage.
+  See [Discussion on Zulip](https://skimage.zulipchat.com/#narrow/channel/181448-development/topic/Coordinate.20review.20for.20skimage2/near/580440609) and Gemini analysis in `./ai_output/gemini_hessian_structure_tensor.md`.
+
+  Plan:
+
+  Remove `order=` keyword for Skimage2 implementation.
+
+  Make everything after `sigma` (the second argument) keyword-only.
+
+  Porting docstring:
+
+  ```rest
+  Skimage2:
+
+  * Makes all arguments after `sigma` keyword only.
+  * Removes the `order=` argument, standardizing to the ij (row-column)
+    ordering of the outputs.
+
+  >>> import skimage as ski1
+  >>> import skimage2 as ski2
+  >>>
+  >>> square = np.zeros((5, 5))
+  >>> H1 = ski1.feature.hessian_matrix(square, sigma=0.1, order='xy')
+  >>> # Reverse output element order to reproduce 'xy'.
+  >>> # Note: this will differ from Skimage1 result by a small amount due
+  >>> # to some precision differences in calculation.
+  >>> H1_equiv = ski2.feature.hessian_matrix(square, sigma=0.1)[::-1]
+  ```
+
+  Alternatively (**check**), use porting function to do transformation:
+
+  ```rest
+  >>> H1 = ski1.feature.hessian_matrix(square, sigma=0.1, order='xy')
+  >>> # Reverse recision differences in calculation.
+  >>> H2 = ski2.feature.hessian_matrix(square, sigma=0.1)
+  >>> H1_equiv = ski2.porting.rc_to_xy(H2)
+  ```
+
+  See AI analysis above for potential implementation of `rc_to_xy`.
 
 * `transform/_geometric.py`: — replace `(M, N)` with and `(I, J)` throughout.
 
