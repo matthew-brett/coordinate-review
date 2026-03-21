@@ -2462,6 +2462,10 @@ Output specification for `H` in `hough_circle`: edit for M, N etc.
   >>> H1_equiv = ski2.feature.hessian_matrix(square, sigma=0.1)[::-1]
   ```
 
+  However, reversing arguments like this can give substantially different
+  answers for `hessian_matrix` (but not `structure_tensor`); see
+  `./error_hessian_structure_tensor.ipynb`.
+
   Alternatively (**check**), use porting function to do transformation:
 
   ```rest
