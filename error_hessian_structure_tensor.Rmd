@@ -24,14 +24,14 @@ img = ski.data.coins()
 
 ```{python}
 Hrr, Hrc, Hcc = ski.feature.hessian_matrix(img,
-                                           sigma=1,
+                                           sigma=(3, 4),
                                            order='rc',
                                            use_gaussian_derivatives=True)
 ```
 
 ```{python}
 Hxx, Hxy, Hyy = ski.feature.hessian_matrix(img,
-                                           sigma=1,
+                                           sigma=(3, 4),
                                            order='xy',
                                            use_gaussian_derivatives=True)
 ```
@@ -56,14 +56,14 @@ from functools import partial
 hessian_matrix = partial(ski.feature.hessian_matrix,
                          use_gaussian_derivatives=True)
 
-def rc_xy_d(func, img, sigma=0.1):
+def rc_xy_d(func, img, sigma=1):
     Hrr, Hrc, Hcc = func(img, sigma, order='rc')
     Hxx, Hxy, Hyy = func(img, sigma, order='xy')
     return maxabsd(Hrr, Hyy), maxabsd(Hrc, Hxy), maxabsd(Hcc, Hxx)
 ```
 
 ```{python}
-rc_xy_d(hessian_matrix, img, 5)
+rc_xy_d(hessian_matrix, img, (3, 4))
 ```
 
 ```{python}
@@ -74,10 +74,10 @@ rc_xy_d(ski.feature.structure_tensor, img)
 def get_xy_from_rc(func, image, **kwargs):
     """Replicate order='xy' using order='rc' logic.
    
-    Gemini function.
+    Function derived from Gemini analysis.
     """
     # Transpose image to reverse axes
-    image_t = np.transpose(image, axes=range(image.ndim)[::-1])
+    image_t = np.transpose(image)
     
     # Handle sigma if provided as a sequence
     if 'sigma' in kwargs and not np.isscalar(kwargs['sigma']):
@@ -87,12 +87,12 @@ def get_xy_from_rc(func, image, **kwargs):
     res_rc = func(image_t, order='rc', **kwargs)
     
     # Transpose elements back
-    return [np.transpose(h, axes=range(image.ndim)[::-1]) for h in res_rc]
+    return [np.transpose(h) for h in res_rc]
 ```
 
 ```{python}
 # Replicate 'xy' order with Gemini wrapper.
-Hxx_g, Hxy_g, Hyy_g = get_xy_from_rc(hessian_matrix, img, sigma=1)
+Hxx_g, Hxy_g, Hyy_g = get_xy_from_rc(hessian_matrix, img, sigma=(3, 4))
 ```
 
 ```{python}
@@ -101,9 +101,13 @@ maxabsd(Hxx, Hxx_g), maxabsd(Hxy, Hxy_g), maxabsd(Hyy, Hyy_g)
 
 ```{python}
 # Now without use_gaussian_derivatives future argument.
-Hxx_g2, Hxy_g2, Hyy_g2 = get_xy_from_rc(ski.feature.hessian_matrix, img, sigma=1)
+Hxx_0gd, Hxy_0gd, Hyy_0gd = ski.feature.hessian_matrix(
+    img,
+    sigma=(3, 4),
+    order='xy')
 ```
 
 ```{python}
-maxabsd(Hxx, Hxx_g2), maxabsd(Hxy, Hxy_g2), maxabsd(Hyy, Hyy_g2)
+# use_gaussian_derivatives=False makes match between rc / xy worse.
+maxabsd(Hrr, Hyy_0gd), maxabsd(Hrc, Hxy_0gd), maxabsd(Hcc, Hxx_0gd)
 ```
